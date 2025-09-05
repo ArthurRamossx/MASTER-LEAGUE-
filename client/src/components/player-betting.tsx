@@ -17,6 +17,7 @@ interface PlayerBettingProps {
 export default function PlayerBetting({ games }: PlayerBettingProps) {
   const [playerName, setPlayerName] = useState("");
   const [selectedGameId, setSelectedGameId] = useState("");
+  const [selectedBetType, setSelectedBetType] = useState("");
   const [betAmount, setBetAmount] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -34,6 +35,7 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
       // Clear form
       setPlayerName("");
       setSelectedGameId("");
+      setSelectedBetType("");
       setBetAmount("");
       // Invalidate bets cache
       queryClient.invalidateQueries({ queryKey: ["/api/bets"] });
@@ -57,7 +59,7 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!playerName.trim() || !selectedGameId || !betAmount) {
+    if (!playerName.trim() || !selectedGameId || !selectedBetType || !betAmount) {
       toast({
         title: "Preencha todos os campos!",
         variant: "destructive",
@@ -84,14 +86,35 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
       return;
     }
 
-    const possibleWin = amount * selectedGame.odd;
+    // Get the correct odd based on bet type
+    let selectedOdd: number;
+    switch (selectedBetType) {
+      case "home":
+        selectedOdd = selectedGame.homeOdd;
+        break;
+      case "away":
+        selectedOdd = selectedGame.awayOdd;
+        break;
+      case "draw":
+        selectedOdd = selectedGame.drawOdd;
+        break;
+      default:
+        toast({
+          title: "Tipo de aposta inválido",
+          variant: "destructive",
+        });
+        return;
+    }
+
+    const possibleWin = amount * selectedOdd;
 
     placeBetMutation.mutate({
       playerName: playerName.trim(),
       gameId: selectedGameId,
       gameName: selectedGame.name,
+      betType: selectedBetType,
       amount,
-      odd: selectedGame.odd,
+      odd: selectedOdd,
       possibleWin,
     });
   };
@@ -133,7 +156,10 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
                   Jogo Disponível
                 </Label>
                 <div className="relative">
-                  <Select value={selectedGameId} onValueChange={setSelectedGameId}>
+                  <Select value={selectedGameId} onValueChange={(value) => {
+                    setSelectedGameId(value);
+                    setSelectedBetType(""); // Reset bet type when game changes
+                  }}>
                     <SelectTrigger className="pl-10" data-testid="select-game">
                       <div className="flex items-center">
                         <Volleyball className="w-4 h-4 text-muted-foreground mr-2" />
@@ -146,7 +172,7 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
                       ) : (
                         games.map((game) => (
                           <SelectItem key={game.id} value={game.id}>
-                            {game.name} (Odd: {game.odd})
+                            {game.name} - {game.homeTeam} vs {game.awayTeam}
                           </SelectItem>
                         ))
                       )}
@@ -154,6 +180,69 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
                   </Select>
                 </div>
               </div>
+              
+              {selectedGameId && (
+                <div>
+                  <Label htmlFor="bet-type-select" className="block text-sm font-medium text-foreground mb-2">
+                    Tipo de Aposta
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(() => {
+                      const selectedGame = games.find(g => g.id === selectedGameId);
+                      if (!selectedGame) return null;
+                      
+                      return (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBetType("home")}
+                            className={`p-3 border rounded-lg text-center transition-colors ${
+                              selectedBetType === "home" 
+                                ? "bg-success text-success-foreground border-success" 
+                                : "border-border hover:bg-muted"
+                            }`}
+                            data-testid="button-bet-home"
+                          >
+                            <div className="font-semibold text-sm">{selectedGame.homeTeam}</div>
+                            <div className="text-xs opacity-70">Casa</div>
+                            <div className="font-bold text-lg">{selectedGame.homeOdd}</div>
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBetType("draw")}
+                            className={`p-3 border rounded-lg text-center transition-colors ${
+                              selectedBetType === "draw" 
+                                ? "bg-warning text-warning-foreground border-warning" 
+                                : "border-border hover:bg-muted"
+                            }`}
+                            data-testid="button-bet-draw"
+                          >
+                            <div className="font-semibold text-sm">Empate</div>
+                            <div className="text-xs opacity-70">X</div>
+                            <div className="font-bold text-lg">{selectedGame.drawOdd}</div>
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBetType("away")}
+                            className={`p-3 border rounded-lg text-center transition-colors ${
+                              selectedBetType === "away" 
+                                ? "bg-destructive text-destructive-foreground border-destructive" 
+                                : "border-border hover:bg-muted"
+                            }`}
+                            data-testid="button-bet-away"
+                          >
+                            <div className="font-semibold text-sm">{selectedGame.awayTeam}</div>
+                            <div className="text-xs opacity-70">Fora</div>
+                            <div className="font-bold text-lg">{selectedGame.awayOdd}</div>
+                          </button>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
               
               <div>
                 <Label htmlFor="bet-amount" className="block text-sm font-medium text-foreground mb-2">
@@ -179,10 +268,44 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
                 </p>
               </div>
               
+              {/* Possible Win Preview */}
+              {selectedGameId && selectedBetType && betAmount && !isNaN(parseFloat(betAmount)) && (
+                <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-2">Possível Ganho</p>
+                    <p className="text-2xl font-bold text-accent">
+                      {(() => {
+                        const selectedGame = games.find(g => g.id === selectedGameId);
+                        if (!selectedGame) return "€0,00";
+                        
+                        let selectedOdd: number;
+                        switch (selectedBetType) {
+                          case "home":
+                            selectedOdd = selectedGame.homeOdd;
+                            break;
+                          case "away":
+                            selectedOdd = selectedGame.awayOdd;
+                            break;
+                          case "draw":
+                            selectedOdd = selectedGame.drawOdd;
+                            break;
+                          default:
+                            return "€0,00";
+                        }
+                        
+                        const amount = parseFloat(betAmount);
+                        const possibleWin = amount * selectedOdd;
+                        return formatCurrency(possibleWin);
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <Button
                 type="submit"
                 className="w-full py-4 text-lg font-semibold bg-accent hover:bg-accent/90 text-accent-foreground"
-                disabled={placeBetMutation.isPending || games.length === 0}
+                disabled={placeBetMutation.isPending || games.length === 0 || !selectedBetType}
                 data-testid="button-place-bet"
               >
                 {placeBetMutation.isPending ? "Processando..." : "Confirmar Aposta"}

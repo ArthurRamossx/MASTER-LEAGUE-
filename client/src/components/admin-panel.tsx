@@ -12,7 +12,11 @@ import type { Game, Bet } from "@shared/schema";
 
 export default function AdminPanel() {
   const [gameName, setGameName] = useState("");
-  const [oddValue, setOddValue] = useState("");
+  const [homeTeam, setHomeTeam] = useState("");
+  const [awayTeam, setAwayTeam] = useState("");
+  const [homeOdd, setHomeOdd] = useState("");
+  const [awayOdd, setAwayOdd] = useState("");
+  const [drawOdd, setDrawOdd] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -25,17 +29,21 @@ export default function AdminPanel() {
   });
 
   const addGameMutation = useMutation({
-    mutationFn: async (gameData: { name: string; odd: number }) => {
+    mutationFn: async (gameData: { name: string; homeTeam: string; awayTeam: string; homeOdd: number; awayOdd: number; drawOdd: number }) => {
       const res = await apiRequest("POST", "/api/games", gameData);
       return res.json();
     },
     onSuccess: (newGame) => {
       toast({
         title: "Jogo adicionado com sucesso!",
-        description: `Jogo "${newGame.name}" foi adicionado com odd ${newGame.odd}.`,
+        description: `Jogo "${newGame.name}" foi adicionado com as odds.`,
       });
       setGameName("");
-      setOddValue("");
+      setHomeTeam("");
+      setAwayTeam("");
+      setHomeOdd("");
+      setAwayOdd("");
+      setDrawOdd("");
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
     },
     onError: () => {
@@ -95,7 +103,7 @@ export default function AdminPanel() {
   const handleAddGame = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!gameName.trim() || !oddValue) {
+    if (!gameName.trim() || !homeTeam.trim() || !awayTeam.trim() || !homeOdd || !awayOdd || !drawOdd) {
       toast({
         title: "Preencha todos os campos!",
         variant: "destructive",
@@ -103,11 +111,14 @@ export default function AdminPanel() {
       return;
     }
 
-    const odd = parseFloat(oddValue);
-    if (isNaN(odd) || odd <= 0) {
+    const home = parseFloat(homeOdd);
+    const away = parseFloat(awayOdd);
+    const draw = parseFloat(drawOdd);
+    
+    if (isNaN(home) || home <= 0 || isNaN(away) || away <= 0 || isNaN(draw) || draw <= 0) {
       toast({
-        title: "Odd inválida",
-        description: "A odd deve ser um número maior que 0.",
+        title: "Odds inválidas",
+        description: "Todas as odds devem ser números maiores que 0.",
         variant: "destructive",
       });
       return;
@@ -115,7 +126,11 @@ export default function AdminPanel() {
 
     addGameMutation.mutate({
       name: gameName.trim(),
-      odd,
+      homeTeam: homeTeam.trim(),
+      awayTeam: awayTeam.trim(),
+      homeOdd: home,
+      awayOdd: away,
+      drawOdd: draw,
     });
   };
 
@@ -140,10 +155,20 @@ export default function AdminPanel() {
       return;
     }
 
-    let csv = "Jogador,Jogo,Valor (EUR),Odd,Possível Ganho (EUR),Status,Data/Hora\n";
+    const getBetTypeLabel = (type: string) => {
+      switch (type) {
+        case "home": return "Casa";
+        case "away": return "Fora";
+        case "draw": return "Empate";
+        default: return type;
+      }
+    };
+
+    let csv = "Jogador,Jogo,Tipo de Aposta,Valor (EUR),Odd,Possível Ganho (EUR),Status,Data/Hora\n";
     bets.forEach(bet => {
       const timestamp = new Date(bet.createdAt).toLocaleString('pt-BR');
-      csv += `"${bet.playerName}","${bet.gameName}",${bet.amount},${bet.odd},${bet.possibleWin},"${bet.status}","${timestamp}"\n`;
+      const betType = getBetTypeLabel(bet.betType);
+      csv += `"${bet.playerName}","${bet.gameName}","${betType}",${bet.amount},${bet.odd},${bet.possibleWin},"${bet.status}","${timestamp}"\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -179,44 +204,103 @@ export default function AdminPanel() {
               Gerenciar Jogos e Odds
             </h2>
             
-            <form onSubmit={handleAddGame} className="grid gap-4 md:grid-cols-3 mb-6">
-              <div>
-                <Label htmlFor="game-name" className="block text-sm font-medium text-foreground mb-2">
-                  Nome do Jogo
-                </Label>
-                <Input
-                  id="game-name"
-                  type="text"
-                  value={gameName}
-                  onChange={(e) => setGameName(e.target.value)}
-                  placeholder="Ex: Brasil vs Argentina"
-                  data-testid="input-game-name"
-                />
+            <form onSubmit={handleAddGame} className="space-y-4 mb-6">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <Label htmlFor="game-name" className="block text-sm font-medium text-foreground mb-2">
+                    Nome do Jogo
+                  </Label>
+                  <Input
+                    id="game-name"
+                    type="text"
+                    value={gameName}
+                    onChange={(e) => setGameName(e.target.value)}
+                    placeholder="Ex: Clássico da Capital"
+                    data-testid="input-game-name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="home-team" className="block text-sm font-medium text-foreground mb-2">
+                    Time da Casa
+                  </Label>
+                  <Input
+                    id="home-team"
+                    type="text"
+                    value={homeTeam}
+                    onChange={(e) => setHomeTeam(e.target.value)}
+                    placeholder="Ex: São Paulo"
+                    data-testid="input-home-team"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="away-team" className="block text-sm font-medium text-foreground mb-2">
+                    Time de Fora
+                  </Label>
+                  <Input
+                    id="away-team"
+                    type="text"
+                    value={awayTeam}
+                    onChange={(e) => setAwayTeam(e.target.value)}
+                    placeholder="Ex: Palmeiras"
+                    data-testid="input-away-team"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="odd-value" className="block text-sm font-medium text-foreground mb-2">
-                  Odd
-                </Label>
-                <Input
-                  id="odd-value"
-                  type="number"
-                  step="0.01"
-                  value={oddValue}
-                  onChange={(e) => setOddValue(e.target.value)}
-                  placeholder="Ex: 1.75"
-                  data-testid="input-odd-value"
-                />
-              </div>
-              <div className="flex items-end">
-                <Button
-                  type="submit"
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-                  disabled={addGameMutation.isPending}
-                  data-testid="button-add-game"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {addGameMutation.isPending ? "Adicionando..." : "Adicionar Jogo"}
-                </Button>
+              
+              <div className="grid gap-4 md:grid-cols-4">
+                <div>
+                  <Label htmlFor="home-odd" className="block text-sm font-medium text-foreground mb-2">
+                    Odd Casa
+                  </Label>
+                  <Input
+                    id="home-odd"
+                    type="number"
+                    step="0.01"
+                    value={homeOdd}
+                    onChange={(e) => setHomeOdd(e.target.value)}
+                    placeholder="Ex: 2.50"
+                    data-testid="input-home-odd"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="away-odd" className="block text-sm font-medium text-foreground mb-2">
+                    Odd Fora
+                  </Label>
+                  <Input
+                    id="away-odd"
+                    type="number"
+                    step="0.01"
+                    value={awayOdd}
+                    onChange={(e) => setAwayOdd(e.target.value)}
+                    placeholder="Ex: 3.00"
+                    data-testid="input-away-odd"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="draw-odd" className="block text-sm font-medium text-foreground mb-2">
+                    Odd Empate
+                  </Label>
+                  <Input
+                    id="draw-odd"
+                    type="number"
+                    step="0.01"
+                    value={drawOdd}
+                    onChange={(e) => setDrawOdd(e.target.value)}
+                    placeholder="Ex: 3.20"
+                    data-testid="input-draw-odd"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    type="submit"
+                    className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                    disabled={addGameMutation.isPending}
+                    data-testid="button-add-game"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    {addGameMutation.isPending ? "Adicionando..." : "Adicionar Jogo"}
+                  </Button>
+                </div>
               </div>
             </form>
 
@@ -231,20 +315,23 @@ export default function AdminPanel() {
                   <TableHeader>
                     <TableRow className="text-primary-foreground bg-primary hover:bg-primary">
                       <TableHead className="text-primary-foreground font-semibold">Jogo</TableHead>
-                      <TableHead className="text-center text-primary-foreground font-semibold">Odd</TableHead>
+                      <TableHead className="text-primary-foreground font-semibold">Times</TableHead>
+                      <TableHead className="text-center text-primary-foreground font-semibold">Casa</TableHead>
+                      <TableHead className="text-center text-primary-foreground font-semibold">Empate</TableHead>
+                      <TableHead className="text-center text-primary-foreground font-semibold">Fora</TableHead>
                       <TableHead className="text-center text-primary-foreground font-semibold">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {gamesLoading ? (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                           Carregando jogos...
                         </TableCell>
                       </TableRow>
                     ) : games.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                           <div className="flex flex-col items-center">
                             <List className="w-8 h-8 mb-2" />
                             Nenhum jogo cadastrado ainda
@@ -255,9 +342,24 @@ export default function AdminPanel() {
                       games.map((game) => (
                         <TableRow key={game.id}>
                           <TableCell className="font-medium text-foreground">{game.name}</TableCell>
+                          <TableCell className="text-foreground">
+                            <div className="text-sm">
+                              <div><strong>{game.homeTeam}</strong> vs <strong>{game.awayTeam}</strong></div>
+                            </div>
+                          </TableCell>
                           <TableCell className="text-center">
-                            <span className="bg-accent/10 text-accent px-3 py-1 rounded-full text-sm font-semibold">
-                              {game.odd}
+                            <span className="bg-success/10 text-success px-2 py-1 rounded text-sm font-semibold">
+                              {game.homeOdd}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="bg-warning/10 text-warning-foreground px-2 py-1 rounded text-sm font-semibold">
+                              {game.drawOdd}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="bg-destructive/10 text-destructive px-2 py-1 rounded text-sm font-semibold">
+                              {game.awayOdd}
                             </span>
                           </TableCell>
                           <TableCell className="text-center">
@@ -307,6 +409,7 @@ export default function AdminPanel() {
                   <TableRow className="text-primary-foreground bg-primary hover:bg-primary">
                     <TableHead className="text-primary-foreground font-semibold">Jogador</TableHead>
                     <TableHead className="text-primary-foreground font-semibold">Jogo</TableHead>
+                    <TableHead className="text-center text-primary-foreground font-semibold">Aposta</TableHead>
                     <TableHead className="text-right text-primary-foreground font-semibold">Valor (€)</TableHead>
                     <TableHead className="text-center text-primary-foreground font-semibold">Odd</TableHead>
                     <TableHead className="text-right text-primary-foreground font-semibold">Possível Ganho (€)</TableHead>
@@ -317,13 +420,13 @@ export default function AdminPanel() {
                 <TableBody>
                   {betsLoading ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                         Carregando apostas...
                       </TableCell>
                     </TableRow>
                   ) : bets.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                         <div className="flex flex-col items-center">
                           <ChartLine className="w-8 h-8 mb-2" />
                           Nenhuma aposta registrada ainda
@@ -331,57 +434,82 @@ export default function AdminPanel() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    bets.map((bet) => (
-                      <TableRow key={bet.id}>
-                        <TableCell className="font-medium text-foreground">{bet.playerName}</TableCell>
-                        <TableCell className="text-foreground">{bet.gameName}</TableCell>
-                        <TableCell className="text-right font-semibold text-foreground">
-                          {formatCurrency(bet.amount)}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="bg-muted text-muted-foreground px-2 py-1 rounded text-sm">
-                            {bet.odd}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right font-semibold text-accent">
-                          {formatCurrency(bet.possibleWin)}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className={`status-badge ${getStatusBadgeClass(bet.status)}`}>
-                            {bet.status}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {bet.status === 'Pendente' ? (
-                            <div className="flex space-x-1 justify-center">
-                              <Button
-                                size="sm"
-                                className="bg-success hover:bg-success/90 text-success-foreground px-2 py-1 text-xs"
-                                onClick={() => handleUpdateBetStatus(bet, 'Ganhou')}
-                                disabled={updateBetStatusMutation.isPending}
-                                data-testid={`button-bet-won-${bet.id}`}
-                              >
-                                <Check className="w-3 h-3 mr-1" />
-                                Ganhou
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                className="px-2 py-1 text-xs"
-                                onClick={() => handleUpdateBetStatus(bet, 'Perdeu')}
-                                disabled={updateBetStatusMutation.isPending}
-                                data-testid={`button-bet-lost-${bet.id}`}
-                              >
-                                <X className="w-3 h-3 mr-1" />
-                                Perdeu
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">Finalizado</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    bets.map((bet) => {
+                      const getBetTypeLabel = (type: string) => {
+                        switch (type) {
+                          case "home": return "Casa";
+                          case "away": return "Fora";
+                          case "draw": return "Empate";
+                          default: return type;
+                        }
+                      };
+
+                      const getBetTypeColor = (type: string) => {
+                        switch (type) {
+                          case "home": return "bg-success/10 text-success";
+                          case "away": return "bg-destructive/10 text-destructive";
+                          case "draw": return "bg-warning/10 text-warning-foreground";
+                          default: return "bg-muted text-muted-foreground";
+                        }
+                      };
+
+                      return (
+                        <TableRow key={bet.id}>
+                          <TableCell className="font-medium text-foreground">{bet.playerName}</TableCell>
+                          <TableCell className="text-foreground">{bet.gameName}</TableCell>
+                          <TableCell className="text-center">
+                            <span className={`px-2 py-1 rounded text-sm font-semibold ${getBetTypeColor(bet.betType)}`}>
+                              {getBetTypeLabel(bet.betType)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-foreground">
+                            {formatCurrency(bet.amount)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="bg-muted text-muted-foreground px-2 py-1 rounded text-sm">
+                              {bet.odd}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-accent">
+                            {formatCurrency(bet.possibleWin)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className={`status-badge ${getStatusBadgeClass(bet.status)}`}>
+                              {bet.status}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {bet.status === 'Pendente' ? (
+                              <div className="flex space-x-1 justify-center">
+                                <Button
+                                  size="sm"
+                                  className="bg-success hover:bg-success/90 text-success-foreground px-2 py-1 text-xs"
+                                  onClick={() => handleUpdateBetStatus(bet, 'Ganhou')}
+                                  disabled={updateBetStatusMutation.isPending}
+                                  data-testid={`button-bet-won-${bet.id}`}
+                                >
+                                  <Check className="w-3 h-3 mr-1" />
+                                  Ganhou
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="px-2 py-1 text-xs"
+                                  onClick={() => handleUpdateBetStatus(bet, 'Perdeu')}
+                                  disabled={updateBetStatusMutation.isPending}
+                                  data-testid={`button-bet-lost-${bet.id}`}
+                                >
+                                  <X className="w-3 h-3 mr-1" />
+                                  Perdeu
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">Finalizado</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>

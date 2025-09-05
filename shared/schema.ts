@@ -12,7 +12,11 @@ export const users = pgTable("users", {
 export const games = pgTable("games", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  odd: real("odd").notNull(),
+  homeTeam: text("home_team").notNull(),
+  awayTeam: text("away_team").notNull(),
+  homeOdd: real("home_odd").notNull(),
+  awayOdd: real("away_odd").notNull(),
+  drawOdd: real("draw_odd").notNull(),
   isActive: integer("is_active").default(1).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -22,6 +26,7 @@ export const bets = pgTable("bets", {
   playerName: text("player_name").notNull(),
   gameId: varchar("game_id").references(() => games.id).notNull(),
   gameName: text("game_name").notNull(),
+  betType: text("bet_type").notNull(), // "home", "away", "draw"
   amount: real("amount").notNull(),
   odd: real("odd").notNull(),
   possibleWin: real("possible_win").notNull(),
@@ -36,13 +41,18 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertGameSchema = createInsertSchema(games).pick({
   name: true,
-  odd: true,
+  homeTeam: true,
+  awayTeam: true,
+  homeOdd: true,
+  awayOdd: true,
+  drawOdd: true,
 });
 
 export const insertBetSchema = createInsertSchema(bets).pick({
   playerName: true,
   gameId: true,
   gameName: true,
+  betType: true,
   amount: true,
   odd: true,
   possibleWin: true,
