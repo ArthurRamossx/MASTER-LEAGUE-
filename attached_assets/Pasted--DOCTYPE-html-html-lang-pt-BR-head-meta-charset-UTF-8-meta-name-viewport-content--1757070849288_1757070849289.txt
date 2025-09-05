@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casa de Aposta - MASTER LEAGUE</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f7f7f7; }
+    h1, h2 { text-align: center; }
+    .hidden { display: none; }
+    .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input, select, button { margin: 5px 0; padding: 10px; width: 100%; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background: #333; color: white; }
+    .admin-controls { margin-top: 20px; }
+    .logout-btn { background: crimson; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>MASTER LEAGUE - Casa de Aposta</h1>
+
+    <!-- Tela de Login do Admin -->
+    <div id="adminLogin">
+      <h2>Entrar como Admin</h2>
+      <input type="password" id="adminPassword" placeholder="Digite a senha">
+      <button onclick="loginAdmin()">Entrar</button>
+    </div>
+
+    <!-- Painel do Admin -->
+    <div id="adminPanel" class="hidden">
+      <button class="logout-btn" onclick="logoutAdmin()">Sair do Admin</button>
+      <h2>Painel do Admin</h2>
+      <input type="text" id="gameName" placeholder="Nome do Jogo">
+      <input type="number" id="oddValue" placeholder="Odd (ex: 1.75)" step="0.01">
+      <button onclick="addGame()">Adicionar Jogo</button>
+      <h3>Jogos Ativos</h3>
+      <table id="gamesTable">
+        <tr><th>Jogo</th><th>Odd</th><th>Ações</th></tr>
+      </table>
+      <h3>Relatório de Apostas</h3>
+      <table id="betsTable">
+        <tr><th>Jogador</th><th>Jogo</th><th>Valor (€)</th><th>Odd</th><th>Possível Ganho (€)</th><th>Status</th><th>Ações</th></tr>
+      </table>
+      <button onclick="exportCSV()">Exportar CSV</button>
+    </div>
+
+    <!-- Área de apostas para jogadores -->
+    <div id="betSection">
+      <h2>Fazer Aposta</h2>
+      <input type="text" id="playerName" placeholder="Seu Nome">
+      <select id="gameSelect"></select>
+      <input type="number" id="betAmount" placeholder="Valor da Aposta (€500.000 - €5.000.000)">
+      <button onclick="placeBet()">Apostar</button>
+    </div>
+  </div>
+
+  <script>
+    let isAdmin = false;
+    let games = JSON.parse(localStorage.getItem("games")) || [];
+    let bets = JSON.parse(localStorage.getItem("bets")) || [];
+
+    function saveData() {
+      localStorage.setItem("games", JSON.stringify(games));
+      localStorage.setItem("bets", JSON.stringify(bets));
+    }
+
+    function loginAdmin() {
+      const pass = document.getElementById("adminPassword").value;
+      if (pass === "admin123") {
+        isAdmin = true;
+        document.getElementById("adminPanel").classList.remove("hidden");
+        document.getElementById("adminLogin").classList.add("hidden");
+        renderGames();
+        renderBets();
+      } else {
+        alert("Senha incorreta!");
+      }
+    }
+
+    function logoutAdmin() {
+      isAdmin = false;
+      document.getElementById("adminPanel").classList.add("hidden");
+      document.getElementById("adminLogin").classList.remove("hidden");
+    }
+
+    function addGame() {
+      const name = document.getElementById("gameName").value;
+      const odd = parseFloat(document.getElementById("oddValue").value);
+      if (!name || isNaN(odd)) return alert("Preencha todos os campos");
+      games.push({ name, odd });
+      saveData();
+      renderGames();
+      renderGameOptions();
+    }
+
+    function removeGame(index) {
+      games.splice(index, 1);
+      saveData();
+      renderGames();
+      renderGameOptions();
+    }
+
+    function placeBet() {
+      const player = document.getElementById("playerName").value;
+      const gameIndex = document.getElementById("gameSelect").value;
+      const amount = parseFloat(document.getElementById("betAmount").value);
+      if (!player || gameIndex === "" || isNaN(amount)) return alert("Preencha todos os campos");
+      if (amount < 500000 || amount > 5000000) return alert("Aposta fora do limite permitido!");
+      const game = games[gameIndex];
+      const possibleWin = (amount * game.odd).toFixed(2);
+      bets.push({ player, game: game.name, amount, odd: game.odd, possibleWin, status: "Pendente" });
+      saveData();
+      alert("Aposta registrada com sucesso!");
+      renderBets();
+    }
+
+    function renderGames() {
+      const table = document.getElementById("gamesTable");
+      table.innerHTML = "<tr><th>Jogo</th><th>Odd</th><th>Ações</th></tr>";
+      games.forEach((g, i) => {
+        table.innerHTML += `<tr><td>${g.name}</td><td>${g.odd}</td><td><button onclick="removeGame(${i})">Remover</button></td></tr>`;
+      });
+    }
+
+    function renderGameOptions() {
+      const select = document.getElementById("gameSelect");
+      select.innerHTML = "";
+      games.forEach((g, i) => {
+        select.innerHTML += `<option value="${i}">${g.name} (Odd: ${g.odd})</option>`;
+      });
+    }
+
+    function renderBets() {
+      const table = document.getElementById("betsTable");
+      table.innerHTML = "<tr><th>Jogador</th><th>Jogo</th><th>Valor (€)</th><th>Odd</th><th>Possível Ganho (€)</th><th>Status</th><th>Ações</th></tr>";
+      bets.forEach((b, i) => {
+        table.innerHTML += `<tr>
+          <td>${b.player}</td>
+          <td>${b.game}</td>
+          <td>${b.amount}</td>
+          <td>${b.odd}</td>
+          <td>${b.possibleWin}</td>
+          <td>${b.status}</td>
+          <td>
+            <button onclick="updateBet(${i}, 'Ganhou')">Ganhou</button>
+            <button onclick="updateBet(${i}, 'Perdeu')">Perdeu</button>
+          </td>
+        </tr>`;
+      });
+    }
+
+    function updateBet(index, status) {
+      bets[index].status = status;
+      saveData();
+      renderBets();
+    }
+
+    function exportCSV() {
+      let csv = "Jogador,Jogo,Valor,Odd,Possível Ganho,Status\n";
+      bets.forEach(b => {
+        csv += `${b.player},${b.game},${b.amount},${b.odd},${b.possibleWin},${b.status}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "relatorio_apostas.csv";
+      link.click();
+    }
+
+    renderGameOptions();
+    if (isAdmin) {
+      renderGames();
+      renderBets();
+    }
+  </script>
+</body>
+</html>
