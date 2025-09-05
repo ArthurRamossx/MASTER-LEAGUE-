@@ -19,6 +19,7 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
   const [selectedGameId, setSelectedGameId] = useState("");
   const [selectedBetType, setSelectedBetType] = useState("");
   const [betAmount, setBetAmount] = useState("");
+  const [displayAmount, setDisplayAmount] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -37,6 +38,7 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
       setSelectedGameId("");
       setSelectedBetType("");
       setBetAmount("");
+      setDisplayAmount("");
       // Invalidate bets cache
       queryClient.invalidateQueries({ queryKey: ["/api/bets"] });
     },
@@ -54,6 +56,31 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
       style: 'currency',
       currency: 'EUR'
     }).format(amount);
+  };
+
+  const formatBetAmount = (value: string) => {
+    // Remove tudo que não é dígito
+    const cleanValue = value.replace(/\D/g, '');
+    
+    // Se não tem valor, retorna vazio
+    if (!cleanValue) return '';
+    
+    // Formata com pontos a cada 3 dígitos
+    return cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
+  const cleanBetAmount = (value: string) => {
+    // Remove pontos para obter o valor numérico
+    return value.replace(/\./g, '');
+  };
+
+  const handleBetAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const formatted = formatBetAmount(inputValue);
+    const cleaned = cleanBetAmount(formatted);
+    
+    setDisplayAmount(formatted);
+    setBetAmount(cleaned);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -251,11 +278,9 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
                 <div className="relative">
                   <Input
                     id="bet-amount"
-                    type="number"
-                    min="500000"
-                    max="5000000"
-                    value={betAmount}
-                    onChange={(e) => setBetAmount(e.target.value)}
+                    type="text"
+                    value={displayAmount}
+                    onChange={handleBetAmountChange}
                     className="pl-10"
                     placeholder="Min: €500.000 - Max: €5.000.000"
                     data-testid="input-bet-amount"
@@ -269,7 +294,7 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
               </div>
               
               {/* Possible Win Preview */}
-              {selectedGameId && selectedBetType && betAmount && !isNaN(parseFloat(betAmount)) && (
+              {selectedGameId && selectedBetType && displayAmount && betAmount && !isNaN(parseFloat(betAmount)) && (
                 <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-2">Possível Ganho</p>
