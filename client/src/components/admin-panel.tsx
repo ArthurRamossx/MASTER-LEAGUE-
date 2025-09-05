@@ -7,8 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Gamepad, Plus, List, ChartLine, Download, Trash, Check, X } from "lucide-react";
+import { Gamepad, Plus, List, ChartLine, Download, Trash, Check, X, FileText, FileImage } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { Game, Bet } from "@shared/schema";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function AdminPanel() {
   const [gameName, setGameName] = useState("");
@@ -146,6 +149,15 @@ export default function AdminPanel() {
     }
   };
 
+  const getBetTypeLabel = (type: string) => {
+    switch (type) {
+      case "home": return "Casa";
+      case "away": return "Fora";
+      case "draw": return "Empate";
+      default: return type;
+    }
+  };
+
   const exportCSV = () => {
     if (bets.length === 0) {
       toast({
@@ -154,15 +166,6 @@ export default function AdminPanel() {
       });
       return;
     }
-
-    const getBetTypeLabel = (type: string) => {
-      switch (type) {
-        case "home": return "Casa";
-        case "away": return "Fora";
-        case "draw": return "Empate";
-        default: return type;
-      }
-    };
 
     let csv = "Jogador,Jogo,Tipo de Aposta,Valor (EUR),Odd,Possível Ganho (EUR),Status,Data/Hora\n";
     bets.forEach(bet => {
@@ -181,6 +184,168 @@ export default function AdminPanel() {
 
     toast({
       title: "Relatório CSV exportado com sucesso!",
+    });
+  };
+
+  const exportPDF = () => {
+    if (bets.length === 0) {
+      toast({
+        title: "Nenhuma aposta para exportar!",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString('pt-BR');
+    
+    // Título
+    doc.setFontSize(18);
+    doc.text('Master League - Relatório de Apostas', 105, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text(`Data: ${currentDate}`, 105, 30, { align: 'center' });
+    
+    // Preparar dados da tabela
+    const tableData = bets.map(bet => [
+      bet.playerName,
+      bet.gameName,
+      getBetTypeLabel(bet.betType),
+      formatCurrency(bet.amount),
+      bet.odd.toString(),
+      formatCurrency(bet.possibleWin),
+      bet.status,
+      new Date(bet.createdAt).toLocaleString('pt-BR')
+    ]);
+
+    // Adicionar tabela
+    autoTable(doc, {
+      head: [['Jogador', 'Jogo', 'Tipo', 'Valor', 'Odd', 'Poss. Ganho', 'Status', 'Data/Hora']],
+      body: tableData,
+      startY: 40,
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [34, 41, 84],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+    });
+
+    doc.save(`relatorio_apostas_masterleague_${new Date().toISOString().split('T')[0]}.pdf`);
+
+    toast({
+      title: "Relatório PDF exportado com sucesso!",
+    });
+  };
+
+  const exportWORD = () => {
+    if (bets.length === 0) {
+      toast({
+        title: "Nenhuma aposta para exportar!",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const currentDate = new Date().toLocaleDateString('pt-BR');
+    
+    // Criar HTML para o documento
+    let htmlContent = `
+      <!DOCTYPE html>
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <title>Relatório Master League</title>
+        <!--[if gte mso 9]>
+        <xml>
+          <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>90</w:Zoom>
+            <w:DoNotPromptForConvert/>
+            <w:DoNotShowRevisions/>
+            <w:DoNotPrintBodyInNewDocument/>
+            <w:DoNotShowMarkupInNewDocument/>
+            <w:DoNotShowComments/>
+            <w:DoNotShowInsertionsAndDeletions/>
+            <w:DoNotShowPropertyChanges/>
+          </w:WordDocument>
+        </xml>
+        <![endif]-->
+        <style>
+          body { font-family: Arial, sans-serif; margin: 40px; }
+          h1 { text-align: center; color: #222954; margin-bottom: 10px; }
+          .date { text-align: center; margin-bottom: 30px; color: #666; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #222954; color: white; font-weight: bold; }
+          tr:nth-child(even) { background-color: #f5f5f5; }
+          .currency { text-align: right; }
+          .center { text-align: center; }
+        </style>
+      </head>
+      <body>
+        <h1>Master League - Relatório de Apostas</h1>
+        <p class="date">Data: ${currentDate}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Jogador</th>
+              <th>Jogo</th>
+              <th>Tipo de Aposta</th>
+              <th>Valor</th>
+              <th>Odd</th>
+              <th>Possível Ganho</th>
+              <th>Status</th>
+              <th>Data/Hora</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    bets.forEach(bet => {
+      const timestamp = new Date(bet.createdAt).toLocaleString('pt-BR');
+      const betType = getBetTypeLabel(bet.betType);
+      htmlContent += `
+        <tr>
+          <td>${bet.playerName}</td>
+          <td>${bet.gameName}</td>
+          <td class="center">${betType}</td>
+          <td class="currency">${formatCurrency(bet.amount)}</td>
+          <td class="center">${bet.odd}</td>
+          <td class="currency">${formatCurrency(bet.possibleWin)}</td>
+          <td class="center">${bet.status}</td>
+          <td class="center">${timestamp}</td>
+        </tr>
+      `;
+    });
+    
+    htmlContent += `
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+
+    // Criar blob e download como .doc (Word pode abrir)
+    const blob = new Blob([htmlContent], { 
+      type: 'application/msword;charset=utf-8' 
+    });
+    
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `relatorio_apostas_masterleague_${new Date().toISOString().split('T')[0]}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Relatório WORD exportado com sucesso!",
+      description: "O arquivo pode ser aberto no Microsoft Word ou LibreOffice.",
     });
   };
 
@@ -392,15 +557,32 @@ export default function AdminPanel() {
                 <ChartLine className="text-accent mr-3" />
                 Relatório de Apostas
               </h2>
-              <Button
-                variant="secondary"
-                onClick={exportCSV}
-                disabled={bets.length === 0}
-                data-testid="button-export-csv"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Exportar CSV
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    disabled={bets.length === 0}
+                    data-testid="button-export-dropdown"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Exportar Relatório
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={exportPDF} data-testid="export-pdf">
+                    <FileImage className="w-4 h-4 mr-2" />
+                    Exportar PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportWORD} data-testid="export-word">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Exportar WORD
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportCSV} data-testid="export-csv">
+                    <Download className="w-4 h-4 mr-2" />
+                    Exportar CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <div className="data-table overflow-x-auto">
