@@ -65,6 +65,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/bets", async (req, res) => {
     try {
+      // Ensure amount is a number
+      if (req.body.amount && typeof req.body.amount === 'string') {
+        req.body.amount = parseInt(req.body.amount, 10);
+      }
+      
       const validatedData = insertBetSchema.parse(req.body);
       
       // Validate bet amount
@@ -77,6 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bet = await storage.createBet(validatedData);
       res.json(bet);
     } catch (error) {
+      console.error("Bet creation error:", error);
       res.status(400).json({ message: "Invalid bet data" });
     }
   });

@@ -94,7 +94,7 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
       return;
     }
 
-    const amount = parseFloat(betAmount);
+    const amount = parseInt(betAmount, 10);
     if (isNaN(amount) || amount < 500000 || amount > 5000000) {
       toast({
         title: "Valor inválido",
@@ -318,7 +318,7 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
                             return "€0,00";
                         }
                         
-                        const amount = parseFloat(betAmount);
+                        const amount = parseInt(betAmount, 10);
                         const possibleWin = amount * selectedOdd;
                         return formatCurrency(possibleWin);
                       })()}
