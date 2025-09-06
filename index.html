@@ -4,1035 +4,179 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MASTER LEAGUE - Casa de Aposta eFootball 2026</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      color: #333;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .header {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 25px;
-      margin-bottom: 30px;
-      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-      text-align: center;
-    }
-
-    .header h1 {
-      color: #2d3748;
-      font-size: 2.5rem;
-      font-weight: 800;
-      margin-bottom: 10px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .header p {
-      color: #718096;
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-
-    .card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 30px;
-      margin-bottom: 25px;
-      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-    }
-
-    .card h2 {
-      color: #2d3748;
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #4a5568;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    input, select, button {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: all 0.3s ease;
-      background: white;
-    }
-
-    input:focus, select:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    .btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-    }
-
-    .btn-success {
-      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-    }
-
-    .btn-danger {
-      background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-    }
-
-    .btn-secondary {
-      background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
-    }
-
-    .logout-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      padding: 8px 16px;
-      font-size: 12px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    th, td {
-      padding: 12px 15px;
-      text-align: center;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    th {
-      background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-      color: white;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    tr:nth-child(even) {
-      background: #f8fafc;
-    }
-
-    tr:hover {
-      background: #edf2f7;
-      transform: scale(1.01);
-      transition: all 0.2s ease;
-    }
-
-    .odds-container {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin: 20px 0;
-    }
-
-    .odd-button {
-      padding: 20px;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      background: white;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-align: center;
-    }
-
-    .odd-button:hover {
-      border-color: #667eea;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-    }
-
-    .odd-button.selected {
-      border-color: #667eea;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-
-    .odd-button .team-name {
-      font-weight: 700;
-      font-size: 14px;
-      margin-bottom: 5px;
-    }
-
-    .odd-button .bet-type {
-      font-size: 12px;
-      opacity: 0.8;
-      margin-bottom: 8px;
-    }
-
-    .odd-button .odd-value {
-      font-size: 24px;
-      font-weight: 800;
-    }
-
-    .status-badge {
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .status-pending {
-      background: #fed7d7;
-      color: #c53030;
-    }
-
-    .status-won {
-      background: #c6f6d5;
-      color: #2f855a;
-    }
-
-    .status-lost {
-      background: #fed7d7;
-      color: #c53030;
-    }
-
-    .export-dropdown {
-      position: relative;
-      display: inline-block;
-    }
-
-    .export-menu {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      border: 1px solid #e2e8f0;
-      min-width: 180px;
-      z-index: 1000;
-    }
-
-    .export-menu button {
-      width: 100%;
-      padding: 12px 16px;
-      border: none;
-      background: none;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.2s ease;
-      border-radius: 0;
-    }
-
-    .export-menu button:hover {
-      background: #f8fafc;
-    }
-
-    .export-menu button:first-child {
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
-    }
-
-    .export-menu button:last-child {
-      border-bottom-left-radius: 8px;
-      border-bottom-right-radius: 8px;
-    }
-
-    .possible-win {
-      background: rgba(102, 126, 234, 0.1);
-      border: 2px solid rgba(102, 126, 234, 0.2);
-      border-radius: 10px;
-      padding: 20px;
-      text-align: center;
-      margin: 20px 0;
-    }
-
-    .possible-win .label {
-      font-size: 14px;
-      color: #4a5568;
-      margin-bottom: 8px;
-    }
-
-    .possible-win .amount {
-      font-size: 28px;
-      font-weight: 800;
-      color: #667eea;
-    }
-
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: white;
-      border-radius: 8px;
-      padding: 16px 20px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-      border-left: 4px solid #48bb78;
-      z-index: 1000;
-      transform: translateX(400px);
-      opacity: 0;
-      transition: all 0.3s ease;
-    }
-
-    .notification.show {
-      transform: translateX(0);
-      opacity: 1;
-    }
-
-    .notification.error {
-      border-left-color: #f56565;
-    }
-
-    @media (max-width: 768px) {
-      .container {
-        padding: 10px;
-      }
-
-      .header h1 {
-        font-size: 2rem;
-      }
-
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-
-      .odds-container {
-        grid-template-columns: 1fr;
-      }
-
-      table {
-        font-size: 12px;
-      }
-
-      th, td {
-        padding: 8px 4px;
-      }
-    }
-  </style>
+  <meta name="description" content="Casa de apostas Master League para eFootball 2026. Sistema completo de apostas com odds personalizadas.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
     <!-- Header -->
-    <div class="header">
+    <header class="header">
       <h1>🏆 MASTER LEAGUE</h1>
       <p>Casa de Aposta - eFootball 2026 Championship</p>
-    </div>
+    </header>
 
     <!-- Login do Admin -->
-    <div id="adminLogin" class="card">
+    <section id="adminLogin" class="card">
       <h2>🔐 Acesso Administrativo</h2>
       <div class="form-group">
         <label for="adminPassword">Senha de Administrador:</label>
-        <input type="password" id="adminPassword" placeholder="Digite a senha do admin">
+        <input type="password" id="adminPassword" placeholder="Digite a senha do admin" autocomplete="current-password">
       </div>
-      <button class="btn" onclick="loginAdmin()">Entrar como Administrador</button>
-    </div>
+      <button class="btn" onclick="loginAdmin()" data-testid="button-admin-login">Entrar como Administrador</button>
+    </section>
 
     <!-- Painel do Admin -->
-    <div id="adminPanel" class="card hidden">
-      <button class="btn btn-danger logout-btn" onclick="logoutAdmin()">Sair do Admin</button>
+    <section id="adminPanel" class="card hidden">
+      <button class="btn btn-danger logout-btn" onclick="logoutAdmin()" data-testid="button-admin-logout">Sair do Admin</button>
       <h2>⚙️ Painel Administrativo</h2>
       
       <!-- Adicionar Jogo -->
-      <h3>Adicionar Novo Jogo</h3>
-      <div class="form-row">
-        <div>
-          <label>Nome do Jogo:</label>
-          <input type="text" id="gameName" placeholder="Ex: Clássico da Capital">
-        </div>
-        <div>
-          <label>Time da Casa:</label>
-          <input type="text" id="homeTeam" placeholder="Ex: São Paulo">
-        </div>
-        <div>
-          <label>Time de Fora:</label>
-          <input type="text" id="awayTeam" placeholder="Ex: Palmeiras">
-        </div>
-      </div>
-      <div class="form-row">
-        <div>
-          <label>Odd Casa:</label>
-          <input type="number" id="homeOdd" placeholder="Ex: 2.50" step="0.01">
-        </div>
-        <div>
-          <label>Odd Empate:</label>
-          <input type="number" id="drawOdd" placeholder="Ex: 3.20" step="0.01">
-        </div>
-        <div>
-          <label>Odd Fora:</label>
-          <input type="number" id="awayOdd" placeholder="Ex: 3.00" step="0.01">
-        </div>
-        <div>
-          <button class="btn btn-success" onclick="addGame()">➕ Adicionar Jogo</button>
-        </div>
+      <div class="admin-section">
+        <h3>Adicionar Novo Jogo</h3>
+        <form id="addGameForm" onsubmit="addGame(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="gameName">Nome do Jogo:</label>
+              <input type="text" id="gameName" placeholder="Ex: Clássico da Capital" required data-testid="input-game-name">
+            </div>
+            <div class="form-group">
+              <label for="homeTeam">Time da Casa:</label>
+              <input type="text" id="homeTeam" placeholder="Ex: São Paulo" required data-testid="input-home-team">
+            </div>
+            <div class="form-group">
+              <label for="awayTeam">Time de Fora:</label>
+              <input type="text" id="awayTeam" placeholder="Ex: Palmeiras" required data-testid="input-away-team">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="homeOdd">Odd Casa:</label>
+              <input type="number" id="homeOdd" placeholder="Ex: 2.50" step="0.01" min="1.01" required data-testid="input-home-odd">
+            </div>
+            <div class="form-group">
+              <label for="drawOdd">Odd Empate:</label>
+              <input type="number" id="drawOdd" placeholder="Ex: 3.20" step="0.01" min="1.01" required data-testid="input-draw-odd">
+            </div>
+            <div class="form-group">
+              <label for="awayOdd">Odd Fora:</label>
+              <input type="number" id="awayOdd" placeholder="Ex: 3.00" step="0.01" min="1.01" required data-testid="input-away-odd">
+            </div>
+            <div class="form-group">
+              <button type="submit" class="btn btn-success" data-testid="button-add-game">➕ Adicionar Jogo</button>
+            </div>
+          </div>
+        </form>
       </div>
 
       <!-- Jogos Ativos -->
-      <h3>🎮 Jogos Ativos</h3>
-      <table id="gamesTable">
-        <thead>
-          <tr>
-            <th>Jogo</th>
-            <th>Times</th>
-            <th>Casa</th>
-            <th>Empate</th>
-            <th>Fora</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="admin-section">
+        <h3>🎮 Jogos Ativos</h3>
+        <div class="table-container">
+          <table id="gamesTable">
+            <thead>
+              <tr>
+                <th>Jogo</th>
+                <th>Times</th>
+                <th>Casa</th>
+                <th>Empate</th>
+                <th>Fora</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
 
       <!-- Relatório de Apostas -->
-      <h3>📊 Relatório de Apostas</h3>
-      <div class="export-dropdown">
-        <button class="btn btn-secondary" onclick="toggleExportMenu()">📥 Exportar Relatório</button>
-        <div id="exportMenu" class="export-menu hidden">
-          <button onclick="exportPDF()">📄 Exportar PDF</button>
-          <button onclick="exportWORD()">📝 Exportar WORD</button>
-          <button onclick="exportCSV()">📊 Exportar CSV</button>
+      <div class="admin-section">
+        <div class="section-header">
+          <h3>📊 Relatório de Apostas</h3>
+          <div class="export-dropdown">
+            <button class="btn btn-secondary" onclick="toggleExportMenu()" data-testid="button-export-dropdown">📥 Exportar Relatório</button>
+            <div id="exportMenu" class="export-menu hidden">
+              <button onclick="exportPDF()" data-testid="export-pdf">📄 Exportar PDF</button>
+              <button onclick="exportWORD()" data-testid="export-word">📝 Exportar WORD</button>
+              <button onclick="exportCSV()" data-testid="export-csv">📊 Exportar CSV</button>
+            </div>
+          </div>
         </div>
-      </div>
-      <table id="betsTable">
-        <thead>
-          <tr>
-            <th>Jogador</th>
-            <th>Jogo</th>
-            <th>Aposta</th>
-            <th>Valor (€)</th>
-            <th>Odd</th>
-            <th>Possível Ganho (€)</th>
-            <th>Status</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <!-- Área de Apostas -->
-    <div id="betSection" class="card">
-      <h2>🎯 Fazer Aposta</h2>
-      <div class="form-group">
-        <label for="playerName">Seu Nome:</label>
-        <input type="text" id="playerName" placeholder="Digite seu nome completo">
-      </div>
-      
-      <div class="form-group">
-        <label for="gameSelect">Jogo Disponível:</label>
-        <select id="gameSelect" onchange="selectGame()">
-          <option value="">Selecione um jogo...</option>
-        </select>
-      </div>
-
-      <div id="oddsContainer" class="hidden">
-        <label>Escolha seu palpite:</label>
-        <div class="odds-container" id="oddsButtons">
-          <!-- Odds buttons will be populated here -->
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="betAmount">Valor da Aposta:</label>
-        <input type="text" id="betAmount" placeholder="Min: €500.000 - Max: €5.000.000" oninput="formatBetAmount(this)">
-        <small style="color: #718096; margin-top: 5px; display: block;">💡 Limite: €500.000 a €5.000.000</small>
-      </div>
-
-      <div id="possibleWinDisplay" class="possible-win hidden">
-        <div class="label">Possível Ganho:</div>
-        <div class="amount" id="possibleWinAmount">€0,00</div>
-      </div>
-
-      <button class="btn" onclick="placeBet()">💰 Confirmar Aposta</button>
-    </div>
-  </div>
-
-  <!-- Notification -->
-  <div id="notification" class="notification">
-    <span id="notificationText"></span>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-  <script>
-    let isAdmin = false;
-    let games = JSON.parse(localStorage.getItem("masterleague_games")) || [];
-    let bets = JSON.parse(localStorage.getItem("masterleague_bets")) || [];
-    let selectedGameId = "";
-    let selectedBetType = "";
-
-    function saveData() {
-      localStorage.setItem("masterleague_games", JSON.stringify(games));
-      localStorage.setItem("masterleague_bets", JSON.stringify(bets));
-    }
-
-    function showNotification(message, isError = false) {
-      const notification = document.getElementById("notification");
-      const notificationText = document.getElementById("notificationText");
-      
-      notificationText.textContent = message;
-      notification.className = `notification ${isError ? 'error' : ''} show`;
-      
-      setTimeout(() => {
-        notification.className = notification.className.replace('show', '');
-      }, 3000);
-    }
-
-    function loginAdmin() {
-      const pass = document.getElementById("adminPassword").value;
-      if (pass === "MASTER2025") {
-        isAdmin = true;
-        document.getElementById("adminPanel").classList.remove("hidden");
-        document.getElementById("adminLogin").classList.add("hidden");
-        renderGames();
-        renderBets();
-        showNotification("Login realizado com sucesso!");
-      } else {
-        showNotification("Senha incorreta! Tente novamente.", true);
-      }
-      document.getElementById("adminPassword").value = "";
-    }
-
-    function logoutAdmin() {
-      isAdmin = false;
-      document.getElementById("adminPanel").classList.add("hidden");
-      document.getElementById("adminLogin").classList.remove("hidden");
-      showNotification("Logout realizado com sucesso!");
-    }
-
-    function addGame() {
-      const name = document.getElementById("gameName").value;
-      const homeTeam = document.getElementById("homeTeam").value;
-      const awayTeam = document.getElementById("awayTeam").value;
-      const homeOdd = parseFloat(document.getElementById("homeOdd").value);
-      const drawOdd = parseFloat(document.getElementById("drawOdd").value);
-      const awayOdd = parseFloat(document.getElementById("awayOdd").value);
-
-      if (!name || !homeTeam || !awayTeam || !homeOdd || !drawOdd || !awayOdd) {
-        showNotification("Preencha todos os campos!", true);
-        return;
-      }
-
-      if (homeOdd <= 0 || drawOdd <= 0 || awayOdd <= 0) {
-        showNotification("Todas as odds devem ser maiores que 0!", true);
-        return;
-      }
-
-      const game = {
-        id: Date.now().toString(),
-        name,
-        homeTeam,
-        awayTeam,
-        homeOdd,
-        drawOdd,
-        awayOdd,
-        createdAt: new Date()
-      };
-
-      games.push(game);
-      saveData();
-      renderGames();
-      renderGameOptions();
-      
-      // Clear form
-      document.getElementById("gameName").value = "";
-      document.getElementById("homeTeam").value = "";
-      document.getElementById("awayTeam").value = "";
-      document.getElementById("homeOdd").value = "";
-      document.getElementById("drawOdd").value = "";
-      document.getElementById("awayOdd").value = "";
-      
-      showNotification(`Jogo "${name}" adicionado com sucesso!`);
-    }
-
-    function removeGame(index) {
-      const game = games[index];
-      if (confirm(`Tem certeza que deseja remover o jogo "${game.name}"?`)) {
-        games.splice(index, 1);
-        saveData();
-        renderGames();
-        renderGameOptions();
-        showNotification("Jogo removido com sucesso!");
-      }
-    }
-
-    function formatCurrency(amount) {
-      return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'EUR'
-      }).format(amount);
-    }
-
-    function formatBetAmount(input) {
-      let value = input.value.replace(/\D/g, '');
-      if (value) {
-        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        input.value = value;
-      }
-      updatePossibleWin();
-    }
-
-    function cleanBetAmount(value) {
-      return value.replace(/\./g, '');
-    }
-
-    function selectGame() {
-      const gameSelect = document.getElementById("gameSelect");
-      selectedGameId = gameSelect.value;
-      
-      if (selectedGameId) {
-        const game = games.find(g => g.id === selectedGameId);
-        if (game) {
-          renderOddsButtons(game);
-          document.getElementById("oddsContainer").classList.remove("hidden");
-        }
-      } else {
-        document.getElementById("oddsContainer").classList.add("hidden");
-      }
-      selectedBetType = "";
-      updatePossibleWin();
-    }
-
-    function renderOddsButtons(game) {
-      const container = document.getElementById("oddsButtons");
-      container.innerHTML = `
-        <div class="odd-button" onclick="selectBetType('home')">
-          <div class="team-name">${game.homeTeam}</div>
-          <div class="bet-type">Casa</div>
-          <div class="odd-value">${game.homeOdd}</div>
-        </div>
-        <div class="odd-button" onclick="selectBetType('draw')">
-          <div class="team-name">Empate</div>
-          <div class="bet-type">X</div>
-          <div class="odd-value">${game.drawOdd}</div>
-        </div>
-        <div class="odd-button" onclick="selectBetType('away')">
-          <div class="team-name">${game.awayTeam}</div>
-          <div class="bet-type">Fora</div>
-          <div class="odd-value">${game.awayOdd}</div>
-        </div>
-      `;
-    }
-
-    function selectBetType(type) {
-      selectedBetType = type;
-      
-      // Update visual selection
-      const buttons = document.querySelectorAll('.odd-button');
-      buttons.forEach(button => button.classList.remove('selected'));
-      
-      const selectedIndex = type === 'home' ? 0 : type === 'draw' ? 1 : 2;
-      buttons[selectedIndex].classList.add('selected');
-      
-      updatePossibleWin();
-    }
-
-    function updatePossibleWin() {
-      const betAmountInput = document.getElementById("betAmount");
-      const possibleWinDisplay = document.getElementById("possibleWinDisplay");
-      const possibleWinAmount = document.getElementById("possibleWinAmount");
-      
-      if (selectedGameId && selectedBetType && betAmountInput.value) {
-        const game = games.find(g => g.id === selectedGameId);
-        const amount = parseInt(cleanBetAmount(betAmountInput.value));
-        
-        if (game && !isNaN(amount) && amount > 0) {
-          let odd = 0;
-          switch (selectedBetType) {
-            case 'home': odd = game.homeOdd; break;
-            case 'draw': odd = game.drawOdd; break;
-            case 'away': odd = game.awayOdd; break;
-          }
-          
-          const possibleWin = amount * odd;
-          possibleWinAmount.textContent = formatCurrency(possibleWin);
-          possibleWinDisplay.classList.remove("hidden");
-          return;
-        }
-      }
-      
-      possibleWinDisplay.classList.add("hidden");
-    }
-
-    function placeBet() {
-      const player = document.getElementById("playerName").value.trim();
-      const betAmountValue = document.getElementById("betAmount").value;
-      const amount = parseInt(cleanBetAmount(betAmountValue));
-
-      if (!player || !selectedGameId || !selectedBetType || !betAmountValue) {
-        showNotification("Preencha todos os campos!", true);
-        return;
-      }
-
-      if (isNaN(amount) || amount < 500000 || amount > 5000000) {
-        showNotification("A aposta deve estar entre €500.000 e €5.000.000!", true);
-        return;
-      }
-
-      const game = games.find(g => g.id === selectedGameId);
-      if (!game) {
-        showNotification("Jogo inválido!", true);
-        return;
-      }
-
-      let odd = 0;
-      let betTypeLabel = "";
-      switch (selectedBetType) {
-        case 'home': 
-          odd = game.homeOdd; 
-          betTypeLabel = "Casa";
-          break;
-        case 'draw': 
-          odd = game.drawOdd; 
-          betTypeLabel = "Empate";
-          break;
-        case 'away': 
-          odd = game.awayOdd; 
-          betTypeLabel = "Fora";
-          break;
-      }
-
-      const possibleWin = amount * odd;
-
-      const bet = {
-        id: Date.now().toString(),
-        playerName: player,
-        gameId: selectedGameId,
-        gameName: game.name,
-        betType: selectedBetType,
-        betTypeLabel: betTypeLabel,
-        amount: amount,
-        odd: odd,
-        possibleWin: possibleWin,
-        status: "Pendente",
-        createdAt: new Date()
-      };
-
-      bets.push(bet);
-      saveData();
-      renderBets();
-      
-      // Clear form
-      document.getElementById("playerName").value = "";
-      document.getElementById("gameSelect").value = "";
-      document.getElementById("betAmount").value = "";
-      document.getElementById("oddsContainer").classList.add("hidden");
-      selectedGameId = "";
-      selectedBetType = "";
-      
-      showNotification(`Aposta de ${formatCurrency(amount)} registrada com sucesso!`);
-    }
-
-    function renderGames() {
-      const tbody = document.querySelector("#gamesTable tbody");
-      tbody.innerHTML = "";
-      
-      if (games.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">Nenhum jogo cadastrado ainda</td></tr>';
-        return;
-      }
-
-      games.forEach((game, index) => {
-        tbody.innerHTML += `
-          <tr>
-            <td><strong>${game.name}</strong></td>
-            <td>${game.homeTeam} vs ${game.awayTeam}</td>
-            <td><span style="background: #c6f6d5; color: #2f855a; padding: 4px 8px; border-radius: 4px; font-weight: bold;">${game.homeOdd}</span></td>
-            <td><span style="background: #fed7d7; color: #c53030; padding: 4px 8px; border-radius: 4px; font-weight: bold;">${game.drawOdd}</span></td>
-            <td><span style="background: #fbb6ce; color: #b83280; padding: 4px 8px; border-radius: 4px; font-weight: bold;">${game.awayOdd}</span></td>
-            <td><button class="btn btn-danger" onclick="removeGame(${index})">🗑️ Remover</button></td>
-          </tr>
-        `;
-      });
-    }
-
-    function renderBets() {
-      const tbody = document.querySelector("#betsTable tbody");
-      tbody.innerHTML = "";
-      
-      if (bets.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8">Nenhuma aposta registrada ainda</td></tr>';
-        return;
-      }
-
-      bets.forEach((bet, index) => {
-        const statusClass = bet.status === "Pendente" ? "status-pending" : 
-                           bet.status === "Ganhou" ? "status-won" : "status-lost";
-        
-        tbody.innerHTML += `
-          <tr>
-            <td><strong>${bet.playerName}</strong></td>
-            <td>${bet.gameName}</td>
-            <td><span style="background: #e6fffa; color: #234e52; padding: 4px 8px; border-radius: 4px; font-weight: bold;">${bet.betTypeLabel}</span></td>
-            <td><strong>${formatCurrency(bet.amount)}</strong></td>
-            <td>${bet.odd}</td>
-            <td><strong style="color: #667eea;">${formatCurrency(bet.possibleWin)}</strong></td>
-            <td><span class="status-badge ${statusClass}">${bet.status}</span></td>
-            <td>
-              ${bet.status === 'Pendente' ? 
-                `<button class="btn btn-success" onclick="updateBetStatus(${index}, 'Ganhou')" style="margin: 2px; padding: 6px 12px; font-size: 12px;">✅ Ganhou</button>
-                 <button class="btn btn-danger" onclick="updateBetStatus(${index}, 'Perdeu')" style="margin: 2px; padding: 6px 12px; font-size: 12px;">❌ Perdeu</button>` : 
-                '<span style="color: #718096; font-size: 12px;">Finalizado</span>'
-              }
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function renderGameOptions() {
-      const select = document.getElementById("gameSelect");
-      select.innerHTML = '<option value="">Selecione um jogo...</option>';
-      
-      games.forEach(game => {
-        select.innerHTML += `<option value="${game.id}">${game.name} - ${game.homeTeam} vs ${game.awayTeam}</option>`;
-      });
-    }
-
-    function updateBetStatus(index, status) {
-      if (confirm(`Confirmar que a aposta ${status.toLowerCase()}?`)) {
-        bets[index].status = status;
-        saveData();
-        renderBets();
-        showNotification(`Status da aposta atualizado para "${status}"!`);
-      }
-    }
-
-    function toggleExportMenu() {
-      const menu = document.getElementById("exportMenu");
-      menu.classList.toggle("hidden");
-    }
-
-    function exportCSV() {
-      if (bets.length === 0) {
-        showNotification("Nenhuma aposta para exportar!", true);
-        return;
-      }
-
-      let csv = "Jogador,Jogo,Tipo de Aposta,Valor (EUR),Odd,Possível Ganho (EUR),Status,Data/Hora\n";
-      bets.forEach(bet => {
-        const timestamp = new Date(bet.createdAt).toLocaleString('pt-BR');
-        csv += `"${bet.playerName}","${bet.gameName}","${bet.betTypeLabel}",${bet.amount},${bet.odd},${bet.possibleWin},"${bet.status}","${timestamp}"\n`;
-      });
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `relatorio_apostas_masterleague_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      document.getElementById("exportMenu").classList.add("hidden");
-      showNotification("Relatório CSV exportado com sucesso!");
-    }
-
-    function exportPDF() {
-      if (bets.length === 0) {
-        showNotification("Nenhuma aposta para exportar!", true);
-        return;
-      }
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const currentDate = new Date().toLocaleDateString('pt-BR');
-      
-      // Título
-      doc.setFontSize(18);
-      doc.text('Master League - Relatório de Apostas', 105, 20, { align: 'center' });
-      doc.setFontSize(12);
-      doc.text(`Data: ${currentDate}`, 105, 30, { align: 'center' });
-      
-      // Preparar dados da tabela
-      const tableData = bets.map(bet => [
-        bet.playerName,
-        bet.gameName,
-        bet.betTypeLabel,
-        formatCurrency(bet.amount),
-        bet.odd.toString(),
-        formatCurrency(bet.possibleWin),
-        bet.status,
-        new Date(bet.createdAt).toLocaleString('pt-BR')
-      ]);
-
-      // Adicionar tabela
-      doc.autoTable({
-        head: [['Jogador', 'Jogo', 'Tipo', 'Valor', 'Odd', 'Poss. Ganho', 'Status', 'Data/Hora']],
-        body: tableData,
-        startY: 40,
-        styles: {
-          fontSize: 8,
-          cellPadding: 3,
-        },
-        headStyles: {
-          fillColor: [34, 41, 84],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245],
-        },
-      });
-
-      doc.save(`relatorio_apostas_masterleague_${new Date().toISOString().split('T')[0]}.pdf`);
-      
-      document.getElementById("exportMenu").classList.add("hidden");
-      showNotification("Relatório PDF exportado com sucesso!");
-    }
-
-    function exportWORD() {
-      if (bets.length === 0) {
-        showNotification("Nenhuma aposta para exportar!", true);
-        return;
-      }
-
-      const currentDate = new Date().toLocaleDateString('pt-BR');
-      
-      let htmlContent = `
-        <!DOCTYPE html>
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-          <meta charset="utf-8">
-          <title>Relatório Master League</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 40px; }
-            h1 { text-align: center; color: #222954; margin-bottom: 10px; }
-            .date { text-align: center; margin-bottom: 30px; color: #666; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #222954; color: white; font-weight: bold; }
-            tr:nth-child(even) { background-color: #f5f5f5; }
-            .currency { text-align: right; }
-            .center { text-align: center; }
-          </style>
-        </head>
-        <body>
-          <h1>Master League - Relatório de Apostas</h1>
-          <p class="date">Data: ${currentDate}</p>
-          <table>
+        <div class="table-container">
+          <table id="betsTable">
             <thead>
               <tr>
                 <th>Jogador</th>
                 <th>Jogo</th>
-                <th>Tipo de Aposta</th>
-                <th>Valor</th>
+                <th>Aposta</th>
+                <th>Valor (€)</th>
                 <th>Odd</th>
-                <th>Possível Ganho</th>
+                <th>Possível Ganho (€)</th>
                 <th>Status</th>
-                <th>Data/Hora</th>
+                <th>Ações</th>
               </tr>
             </thead>
-            <tbody>
-      `;
-      
-      bets.forEach(bet => {
-        const timestamp = new Date(bet.createdAt).toLocaleString('pt-BR');
-        htmlContent += `
-          <tr>
-            <td>${bet.playerName}</td>
-            <td>${bet.gameName}</td>
-            <td class="center">${bet.betTypeLabel}</td>
-            <td class="currency">${formatCurrency(bet.amount)}</td>
-            <td class="center">${bet.odd}</td>
-            <td class="currency">${formatCurrency(bet.possibleWin)}</td>
-            <td class="center">${bet.status}</td>
-            <td class="center">${timestamp}</td>
-          </tr>
-        `;
-      });
-      
-      htmlContent += `
-            </tbody>
+            <tbody></tbody>
           </table>
-        </body>
-        </html>
-      `;
+        </div>
+      </div>
+    </section>
 
-      const blob = new Blob([htmlContent], { 
-        type: 'application/msword;charset=utf-8' 
-      });
-      
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `relatorio_apostas_masterleague_${new Date().toISOString().split('T')[0]}.doc`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      document.getElementById("exportMenu").classList.add("hidden");
-      showNotification("Relatório WORD exportado com sucesso!");
-    }
+    <!-- Área de Apostas -->
+    <section id="betSection" class="card">
+      <h2>🎯 Fazer Aposta</h2>
+      <form id="betForm" onsubmit="placeBet(event)">
+        <div class="form-group">
+          <label for="playerName">Seu Nome:</label>
+          <input type="text" id="playerName" placeholder="Digite seu nome completo" required data-testid="input-player-name">
+        </div>
+        
+        <div class="form-group">
+          <label for="gameSelect">Jogo Disponível:</label>
+          <select id="gameSelect" onchange="selectGame()" required data-testid="select-game">
+            <option value="">Selecione um jogo...</option>
+          </select>
+        </div>
 
-    // Close export menu when clicking outside
-    document.addEventListener('click', function(event) {
-      const dropdown = document.querySelector('.export-dropdown');
-      const menu = document.getElementById('exportMenu');
-      if (!dropdown.contains(event.target)) {
-        menu.classList.add('hidden');
-      }
-    });
+        <div id="oddsContainer" class="hidden">
+          <label>Escolha seu palpite:</label>
+          <div class="odds-container" id="oddsButtons">
+            <!-- Odds buttons will be populated here -->
+          </div>
+        </div>
 
-    // Initialize
-    renderGameOptions();
-    if (isAdmin) {
-      renderGames();
-      renderBets();
-    }
-  </script>
+        <div class="form-group">
+          <label for="betAmount">Valor da Aposta:</label>
+          <input type="text" id="betAmount" placeholder="Min: €500.000 - Max: €5.000.000" oninput="formatBetAmount(this)" required data-testid="input-bet-amount">
+          <small class="help-text">💡 Limite: €500.000 a €5.000.000</small>
+        </div>
+
+        <div id="possibleWinDisplay" class="possible-win hidden">
+          <div class="label">Possível Ganho:</div>
+          <div class="amount" id="possibleWinAmount">€0,00</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" data-testid="button-place-bet">💰 Confirmar Aposta</button>
+      </form>
+    </section>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="notification" class="notification">
+    <span id="notificationText"></span>
+    <button onclick="closeNotification()" class="notification-close">×</button>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div id="loadingSpinner" class="loading-spinner hidden">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
