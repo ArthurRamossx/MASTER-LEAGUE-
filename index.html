@@ -178,5 +178,58 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="script.js"></script>
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    // Configuração Firebase
+    const firebaseConfig = {
+      databaseURL: "https://master-league-853a2-default-rtdb.firebaseio.com/"
+    };
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Salvar aposta
+    window.placeBet = function(event) {
+      event.preventDefault();
+      const nome = document.getElementById("playerName").value;
+      const jogo = document.getElementById("gameSelect").value;
+      const valor = document.getElementById("betAmount").value;
+
+      if (!nome || !jogo || !valor) return;
+
+      push(ref(db, "apostas"), {
+        jogador: nome,
+        jogo: jogo,
+        valor: valor,
+        status: "Pendente"
+      });
+    };
+
+    // Mostrar apostas em tempo real
+    const betsTable = document.querySelector("#betsTable tbody");
+    onValue(ref(db, "apostas"), (snapshot) => {
+      betsTable.innerHTML = "";
+      snapshot.forEach((child) => {
+        const dados = child.val();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${dados.jogador}</td>
+          <td>${dados.jogo}</td>
+          <td>-</td>
+          <td>€${dados.valor}</td>
+          <td>-</td>
+          <td>-</td>
+          <td>${dados.status}</td>
+          <td>-</td>
+        `;
+        betsTable.appendChild(tr);
+      });
+    });
+  </script>
+
 </body>
 </html>
