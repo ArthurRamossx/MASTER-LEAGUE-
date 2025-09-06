@@ -96,11 +96,12 @@ export default function AdminPanel() {
     },
   });
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'EUR'
-    }).format(amount);
+    }).format(numAmount);
   };
 
   const handleAddGame = (e: React.FormEvent) => {

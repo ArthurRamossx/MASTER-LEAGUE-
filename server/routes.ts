@@ -65,15 +65,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/bets", async (req, res) => {
     try {
-      // Ensure amount is a number
-      if (req.body.amount && typeof req.body.amount === 'string') {
-        req.body.amount = parseInt(req.body.amount, 10);
-      }
-      
       const validatedData = insertBetSchema.parse(req.body);
       
+      // Convert amount to number for validation (it comes as string from frontend)
+      const amountNumber = typeof validatedData.amount === 'string' ? 
+        parseFloat(validatedData.amount) : validatedData.amount;
+      
       // Validate bet amount
-      if (validatedData.amount < 500000 || validatedData.amount > 5000000) {
+      if (amountNumber < 500000 || amountNumber > 5000000) {
         return res.status(400).json({ 
           message: "Bet amount must be between €500,000 and €5,000,000" 
         });

@@ -51,11 +51,12 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
     },
   });
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'EUR'
-    }).format(amount);
+    }).format(numAmount);
   };
 
   const formatBetAmount = (value: string) => {
@@ -140,9 +141,9 @@ export default function PlayerBetting({ games }: PlayerBettingProps) {
       gameId: selectedGameId,
       gameName: selectedGame.name,
       betType: selectedBetType,
-      amount,
+      amount: amount.toString(),
       odd: selectedOdd,
-      possibleWin,
+      possibleWin: possibleWin.toString(),
     });
   };
 

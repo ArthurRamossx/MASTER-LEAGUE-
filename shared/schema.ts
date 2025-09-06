@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, real, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, real, integer, timestamp, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -27,9 +27,9 @@ export const bets = pgTable("bets", {
   gameId: varchar("game_id").references(() => games.id).notNull(),
   gameName: text("game_name").notNull(),
   betType: text("bet_type").notNull(), // "home", "away", "draw"
-  amount: real("amount").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
   odd: real("odd").notNull(),
-  possibleWin: real("possible_win").notNull(),
+  possibleWin: numeric("possible_win", { precision: 15, scale: 2 }).notNull(),
   status: text("status").notNull().default("Pendente"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
