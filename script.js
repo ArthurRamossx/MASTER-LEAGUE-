@@ -22,6 +22,7 @@ window.loginAdmin = function () {
   const passInput = document.getElementById("adminPassword").value;
   if (passInput === ADMIN_PASSWORD) {
     appState.isAdmin = true;
+    localStorage.setItem("isAdminSession", "true");
     Utils.show(document.getElementById("adminPanel"));
     Utils.hide(document.getElementById("adminLogin"));
     renderGamesTable();
@@ -34,10 +35,22 @@ window.loginAdmin = function () {
 
 window.logoutAdmin = function () {
   appState.isAdmin = false;
+  localStorage.removeItem("isAdminSession");
   Utils.hide(document.getElementById("adminPanel"));
   Utils.show(document.getElementById("adminLogin"));
   notify("⚠️ Logout realizado.");
 };
+
+// --- RESTAURA SESSÃO ADMIN AO CARREGAR ---
+document.addEventListener("DOMContentLoaded", () => {
+  if (localStorage.getItem("isAdminSession") === "true") {
+    appState.isAdmin = true;
+    Utils.show(document.getElementById("adminPanel"));
+    Utils.hide(document.getElementById("adminLogin"));
+    renderGamesTable();
+    renderBetsTable();
+  }
+});
 
 // --- NOTIFICAÇÕES ---
 function notify(msg) {
@@ -148,7 +161,7 @@ window.selectBetType = function (type) {
 
 // --- FIREBASE ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getDatabase, ref, onValue, push, remove, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "SUA_API_KEY",
@@ -203,51 +216,3 @@ window.placeBet = function (e) {
   }
   const name = document.getElementById("playerName").value;
   const amount = Number(document.getElementById("betAmount").value.replace(/\D/g, ""));
-  if (amount < BET_LIMITS.MIN || amount > BET_LIMITS.MAX) {
-    return notify("❌ Valor fora do limite!");
-  }
-  const bet = {
-    id: Utils.generateId(),
-    player: name,
-    gameId: appState.selectedGameId,
-    type: appState.selectedBetType,
-    amount,
-    status: "Pendente"
-  };
-  set(ref(db, `bets/${bet.id}`), bet);
-  document.getElementById("betForm").reset();
-  Utils.hide(document.getElementBy
-             // --- Complemento para manter sessão do admin ---
-             window.loginAdmin = function () {
-               const passInput = document.getElementById("adminPassword").value;
-               if (passInput === ADMIN_PASSWORD) {
-                 appState.isAdmin = true;
-                 localStorage.setItem("isAdminSession", "true"); // salva sessão
-                 Utils.show(document.getElementById("adminPanel"));
-                 Utils.hide(document.getElementById("adminLogin"));
-                 renderGamesTable();
-                 renderBetsTable();
-                 notify("✔️ Login admin bem-sucedido!");
-               } else {
-                 notify("❌ Senha incorreta!");
-               }
-             };
-
-             window.logoutAdmin = function () {
-               appState.isAdmin = false;
-               localStorage.removeItem("isAdminSession"); // remove sessão
-               Utils.hide(document.getElementById("adminPanel"));
-               Utils.show(document.getElementById("adminLogin"));
-               notify("⚠️ Logout realizado.");
-             };
-
-             // Ao carregar a página, verifica se já estava logado
-             document.addEventListener("DOMContentLoaded", () => {
-               if (localStorage.getItem("isAdminSession") === "true") {
-                 appState.isAdmin = true;
-                 Utils.show(document.getElementById("adminPanel"));
-                 Utils.hide(document.getElementById("adminLogin"));
-                 renderGamesTable();
-                 renderBetsTable();
-               }
-             });

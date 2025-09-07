@@ -25,12 +25,12 @@
         <label for="adminPassword">Senha de Administrador:</label>
         <input type="password" id="adminPassword" placeholder="Digite a senha do admin" autocomplete="current-password">
       </div>
-      <button class="btn" onclick="loginAdmin()" data-testid="button-admin-login">Entrar como Administrador</button>
+      <button class="btn" onclick="loginAdmin()">Entrar como Administrador</button>
     </section>
 
     <!-- Painel do Admin -->
     <section id="adminPanel" class="card hidden">
-      <button class="btn btn-danger logout-btn" onclick="logoutAdmin()" data-testid="button-admin-logout">Sair do Admin</button>
+      <button class="btn btn-danger logout-btn" onclick="logoutAdmin()">Sair do Admin</button>
       <h2>⚙️ Painel Administrativo</h2>
 
       <!-- Adicionar Jogo -->
@@ -40,32 +40,32 @@
           <div class="form-row">
             <div class="form-group">
               <label for="gameName">Nome do Jogo:</label>
-              <input type="text" id="gameName" placeholder="Ex: Clássico da Capital" required data-testid="input-game-name">
+              <input type="text" id="gameName" required>
             </div>
             <div class="form-group">
               <label for="homeTeam">Time da Casa:</label>
-              <input type="text" id="homeTeam" placeholder="Ex: São Paulo" required data-testid="input-home-team">
+              <input type="text" id="homeTeam" required>
             </div>
             <div class="form-group">
               <label for="awayTeam">Time de Fora:</label>
-              <input type="text" id="awayTeam" placeholder="Ex: Palmeiras" required data-testid="input-away-team">
+              <input type="text" id="awayTeam" required>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label for="homeOdd">Odd Casa:</label>
-              <input type="number" id="homeOdd" placeholder="Ex: 2.50" step="0.01" min="1.01" required data-testid="input-home-odd">
+              <input type="number" id="homeOdd" step="0.01" min="1.01" required>
             </div>
             <div class="form-group">
               <label for="drawOdd">Odd Empate:</label>
-              <input type="number" id="drawOdd" placeholder="Ex: 3.20" step="0.01" min="1.01" required data-testid="input-draw-odd">
+              <input type="number" id="drawOdd" step="0.01" min="1.01" required>
             </div>
             <div class="form-group">
               <label for="awayOdd">Odd Fora:</label>
-              <input type="number" id="awayOdd" placeholder="Ex: 3.00" step="0.01" min="1.01" required data-testid="input-away-odd">
+              <input type="number" id="awayOdd" step="0.01" min="1.01" required>
             </div>
             <div class="form-group">
-              <button type="submit" class="btn btn-success" data-testid="button-add-game">➕ Adicionar Jogo</button>
+              <button type="submit" class="btn btn-success">➕ Adicionar Jogo</button>
             </div>
           </div>
         </form>
@@ -93,17 +93,7 @@
 
       <!-- Relatório de Apostas -->
       <div class="admin-section">
-        <div class="section-header">
-          <h3>📊 Relatório de Apostas</h3>
-          <div class="export-dropdown">
-            <button class="btn btn-secondary" onclick="toggleExportMenu()" data-testid="button-export-dropdown">📥 Exportar Relatório</button>
-            <div id="exportMenu" class="export-menu hidden">
-              <button onclick="exportPDF()" data-testid="export-pdf">📄 Exportar PDF</button>
-              <button onclick="exportWORD()" data-testid="export-word">📝 Exportar WORD</button>
-              <button onclick="exportCSV()" data-testid="export-csv">📊 Exportar CSV</button>
-            </div>
-          </div>
-        </div>
+        <h3>📊 Relatório de Apostas</h3>
         <div class="table-container">
           <table id="betsTable">
             <thead>
@@ -130,12 +120,12 @@
       <form id="betForm" onsubmit="placeBet(event)">
         <div class="form-group">
           <label for="playerName">Seu Nome:</label>
-          <input type="text" id="playerName" placeholder="Digite seu nome completo" required data-testid="input-player-name">
+          <input type="text" id="playerName" required>
         </div>
 
         <div class="form-group">
           <label for="gameSelect">Jogo Disponível:</label>
-          <select id="gameSelect" onchange="selectGame()" required data-testid="select-game">
+          <select id="gameSelect" onchange="selectGame()" required>
             <option value="">Selecione um jogo...</option>
           </select>
         </div>
@@ -147,8 +137,8 @@
 
         <div class="form-group">
           <label for="betAmount">Valor da Aposta:</label>
-          <input type="text" id="betAmount" placeholder="Min: €500.000 - Max: €5.000.000" oninput="formatBetAmount(this)" required data-testid="input-bet-amount">
-          <small class="help-text">💡 Limite: €500.000 a €5.000.000</small>
+          <input type="text" id="betAmount" oninput="formatBetAmount(this)" required>
+          <small>💡 Limite: €500.000 a €5.000.000</small>
         </div>
 
         <div id="possibleWinDisplay" class="possible-win hidden">
@@ -156,7 +146,7 @@
           <div class="amount" id="possibleWinAmount">€0,00</div>
         </div>
 
-        <button type="submit" class="btn btn-primary" data-testid="button-place-bet">💰 Confirmar Aposta</button>
+        <button type="submit" class="btn btn-primary">💰 Confirmar Aposta</button>
       </form>
     </section>
   </div>
@@ -166,12 +156,6 @@
     <button onclick="closeNotification()" class="notification-close">×</button>
   </div>
 
-  <div id="loadingSpinner" class="loading-spinner hidden">
-    <div class="spinner"></div>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script type="module" src="script.js"></script>
 </body>
 </html>
