@@ -217,3 +217,37 @@ window.placeBet = function (e) {
   set(ref(db, `bets/${bet.id}`), bet);
   document.getElementById("betForm").reset();
   Utils.hide(document.getElementBy
+             // --- Complemento para manter sessão do admin ---
+             window.loginAdmin = function () {
+               const passInput = document.getElementById("adminPassword").value;
+               if (passInput === ADMIN_PASSWORD) {
+                 appState.isAdmin = true;
+                 localStorage.setItem("isAdminSession", "true"); // salva sessão
+                 Utils.show(document.getElementById("adminPanel"));
+                 Utils.hide(document.getElementById("adminLogin"));
+                 renderGamesTable();
+                 renderBetsTable();
+                 notify("✔️ Login admin bem-sucedido!");
+               } else {
+                 notify("❌ Senha incorreta!");
+               }
+             };
+
+             window.logoutAdmin = function () {
+               appState.isAdmin = false;
+               localStorage.removeItem("isAdminSession"); // remove sessão
+               Utils.hide(document.getElementById("adminPanel"));
+               Utils.show(document.getElementById("adminLogin"));
+               notify("⚠️ Logout realizado.");
+             };
+
+             // Ao carregar a página, verifica se já estava logado
+             document.addEventListener("DOMContentLoaded", () => {
+               if (localStorage.getItem("isAdminSession") === "true") {
+                 appState.isAdmin = true;
+                 Utils.show(document.getElementById("adminPanel"));
+                 Utils.hide(document.getElementById("adminLogin"));
+                 renderGamesTable();
+                 renderBetsTable();
+               }
+             });
