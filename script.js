@@ -234,3 +234,88 @@ function init() {
   }
 }
 init();
+// --- Firebase Initialization ---
+const FIREBASE_URL = "https://master-league-853a2-default-rtdb.firebaseio.com/";
+const Firebase = {
+  get: async (path) => {
+    try {
+      const res = await fetch(`${FIREBASE_URL}${path}.json`);
+      return await res.json();
+    } catch (err) {
+      console.error("Firebase GET error:", err);
+      return null;
+    }
+  },
+  set: async (path, data) => {
+    try {
+      const res = await fetch(`${FIREBASE_URL}${path}.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      return await res.json();
+    } catch (err) {
+      console.error("Firebase SET error:", err);
+      return null;
+    }
+  },
+  push: async (path, data) => {
+    try {
+      const res = await fetch(`${FIREBASE_URL}${path}.json`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      return await res.json();
+    } catch (err) {
+      console.error("Firebase PUSH error:", err);
+      return null;
+    }
+  }
+};
+
+// --- Overwrite GameManager.add to push to Firebase ---
+const originalAddGame = GameManager.add;
+GameManager.add = (gameData) => {
+  const result = originalAddGame(gameData);
+  if (result) {
+    Firebase.push("games", appState.games[appState.games.length - 1]);
+  }
+  return result;
+};
+
+// --- Load games from Firebase on init ---
+async function loadGamesFromFirebase() {
+  const fbGames = await Firebase.get("games");
+  if (fbGames) {
+    appState.games = Object.values(fbGames);
+    GameManager.renderGames();
+    GameManager.renderGameOptions();
+  }
+}
+
+// --- Overwrite BetManager.place to push bets to Firebase ---
+const originalPlaceBet = BetManager.place;
+BetManager.place = (betData) => {
+  const result = originalPlaceBet(betData);
+  if (result) {
+    Firebase.push("bets", appState.bets[appState.bets.length - 1]);
+  }
+  return result;
+};
+
+// --- Load bets from Firebase on init ---
+async function loadBetsFromFirebase() {
+  const fbBets = await Firebase.get("bets");
+  if (fbBets) {
+    appState.bets = Object.values(fbBets);
+    BetManager.renderBets();
+  }
+}
+
+// --- Initialize Firebase Data on DOMContentLoaded ---
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadGamesFromFirebase();
+  await loadBetsFromFirebase();
+});
+
