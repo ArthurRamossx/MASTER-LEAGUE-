@@ -1,247 +1,236 @@
-// Master League - Firebase e Gerenciamento Final
-
-import {
-  getDatabase,
-  ref,
-  push,
-  onValue,
-  remove,
-  update,
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-// Config
-const ADMIN_PASSWORD = "MASTER2025";
-const BET_LIMITS = { MIN: 500000, MAX: 5000000 };
-const db = getDatabase();
-
-// Estado
+// Master League Betting System - Versão Final
 let appState = {
   isAdmin: false,
   selectedGameId: "",
   selectedBetType: "",
+  games: [],
+  bets: [],
+  isLoading: false
 };
 
-// Utils
+const STORAGE_KEYS = {
+  GAMES: "masterleague_games_v2",
+  BETS: "masterleague_bets_v2",
+  ADMIN_SESSION: "masterleague_admin_session"
+};
+
+const ADMIN_PASSWORD = "MASTER2025";
+const BET_LIMITS = { MIN: 500000, MAX: 5000000 };
+
 const Utils = {
   generateId: () => `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-  formatCurrency: (val) =>
-    new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(val),
-  formatBetAmount: (val) =>
-    val.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, "."),
-  cleanBetAmount: (val) => val.replace(/\./g, ""),
+  formatCurrency: num => `€${Number(num).toLocaleString("pt-BR")}`,
+  show: el => el.classList.remove("hidden"),
+  hide: el => el.classList.add("hidden")
 };
 
-// UI
-const UI = {
-  toggle: (id, show) =>
-    document.getElementById(id)?.classList[show ? "remove" : "add"]("hidden"),
-  notify: (msg, error = false) => {
-    const n = document.getElementById("notification");
-    document.getElementById("notificationText").textContent = msg;
-    n.className = `notification ${error ? "error" : ""} show`;
-    setTimeout(() => n.classList.remove("show"), 5000);
-  },
-};
-
-// Auth
-function loginAdmin() {
-  const pass = document.getElementById("adminPassword").value;
-  if (pass === ADMIN_PASSWORD) {
+// --- ADMIN LOGIN ---
+window.loginAdmin = function () {
+  const passInput = document.getElementById("adminPassword").value;
+  if (passInput === ADMIN_PASSWORD) {
     appState.isAdmin = true;
-    UI.toggle("adminPanel", true);
-    UI.toggle("adminLogin", false);
-    UI.notify("Login admin realizado!");
-  } else UI.notify("Senha incorreta!", true);
-}
-function logoutAdmin() {
+    localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true");
+    Utils.show(document.getElementById("adminPanel"));
+    Utils.hide(document.getElementById("adminLogin"));
+    renderGamesTable();
+    renderBetsTable();
+    notify("✔️ Login admin bem-sucedido!");
+  } else {
+    notify("❌ Senha incorreta!");
+  }
+};
+
+window.logoutAdmin = function () {
   appState.isAdmin = false;
-  UI.toggle("adminPanel", false);
-  UI.toggle("adminLogin", true);
-  UI.notify("Logout realizado!");
+  localStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION);
+  Utils.hide(document.getElementById("adminPanel"));
+  Utils.show(document.getElementById("adminLogin"));
+  notify("⚠️ Logout realizado.");
+};
+
+// --- NOTIFICAÇÕES ---
+function notify(msg) {
+  const el = document.getElementById("notification");
+  document.getElementById("notificationText").textContent = msg;
+  Utils.show(el);
+  setTimeout(() => Utils.hide(el), 3000);
+}
+window.closeNotification = () => Utils.hide(document.getElementById("notification"));
+
+// --- FORMATAÇÃO DE APOSTA ---
+window.formatBetAmount = function (input) {
+  let val = input.value.replace(/\D/g, "");
+  input.value = Number(val).toLocaleString("pt-BR");
+  calculatePossibleWin();
+};
+
+// --- CALCULAR POSSÍVEL GANHO ---
+function calculatePossibleWin() {
+  if (!appState.selectedGameId || !appState.selectedBetType) return;
+  const game = appState.games.find(g => g.id === appState.selectedGameId);
+  if (!game) return;
+  const amountInput = document.getElementById("betAmount").value.replace(/\D/g, "");
+  const amount = Number(amountInput);
+  if (amount < BET_LIMITS.MIN || amount > BET_LIMITS.MAX) return;
+  let odd = 1;
+  if (appState.selectedBetType === "home") odd = game.homeOdd;
+  if (appState.selectedBetType === "draw") odd = game.drawOdd;
+  if (appState.selectedBetType === "away") odd = game.awayOdd;
+  document.getElementById("possibleWinAmount").textContent = Utils.formatCurrency(amount * odd);
+  Utils.show(document.getElementById("possibleWinDisplay"));
 }
 
-// Game Management
-function addGame(event) {
-  event.preventDefault();
-  const name = document.getElementById("gameName").value;
-  const homeTeam = document.getElementById("homeTeam").value;
-  const awayTeam = document.getElementById("awayTeam").value;
-  const homeOdd = parseFloat(document.getElementById("homeOdd").value);
-  const drawOdd = parseFloat(document.getElementById("drawOdd").value);
-  const awayOdd = parseFloat(document.getElementById("awayOdd").value);
-
-  if (!name || !homeTeam || !awayTeam || !homeOdd || !drawOdd || !awayOdd)
-    return UI.notify("Preencha todos os campos!", true);
-
-  push(ref(db, "games"), {
-    name,
-    homeTeam,
-    awayTeam,
-    homeOdd,
-    drawOdd,
-    awayOdd,
-  });
-  UI.notify(`Jogo "${name}" adicionado!`);
+// --- JOGOS ---
+function saveGames() {
+  localStorage.setItem(STORAGE_KEYS.GAMES, JSON.stringify(appState.games));
 }
-
-function removeGame(id) {
-  remove(ref(db, "games/" + id));
-  UI.notify("Jogo removido!");
+function loadGames() {
+  const data = localStorage.getItem(STORAGE_KEYS.GAMES);
+  if (data) appState.games = JSON.parse(data);
 }
-
-function renderGames(games) {
+window.addGame = function (e) {
+  e.preventDefault();
+  const game = {
+    id: Utils.generateId(),
+    name: document.getElementById("gameName").value,
+    homeTeam: document.getElementById("homeTeam").value,
+    awayTeam: document.getElementById("awayTeam").value,
+    homeOdd: Number(document.getElementById("homeOdd").value),
+    drawOdd: Number(document.getElementById("drawOdd").value),
+    awayOdd: Number(document.getElementById("awayOdd").value)
+  };
+  appState.games.push(game);
+  saveGames();
+  renderGamesTable();
+  populateGameSelect();
+  e.target.reset();
+  notify("✅ Jogo adicionado!");
+};
+function renderGamesTable() {
   const tbody = document.querySelector("#gamesTable tbody");
-  const select = document.getElementById("gameSelect");
   tbody.innerHTML = "";
-  select.innerHTML = '<option value="">Selecione um jogo...</option>';
-  if (!games) return;
-  Object.entries(games).forEach(([id, game]) => {
-    const row = tbody.insertRow();
-    row.innerHTML = `<td>${game.name}</td>
-      <td>${game.homeTeam} vs ${game.awayTeam}</td>
-      <td>${game.homeOdd}</td>
-      <td>${game.drawOdd}</td>
-      <td>${game.awayOdd}</td>
-      <td>${appState.isAdmin ? `<button class="btn btn-danger" onclick="removeGame('${id}')">Remover</button>` : ""}</td>`;
-    const opt = document.createElement("option");
-    opt.value = id;
-    opt.textContent = `${game.name} - ${game.homeTeam} vs ${game.awayTeam}`;
-    select.appendChild(opt);
+  appState.games.forEach(g => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${g.name}</td>
+      <td>${g.homeTeam} x ${g.awayTeam}</td>
+      <td>${g.homeOdd}</td>
+      <td>${g.drawOdd}</td>
+      <td>${g.awayOdd}</td>
+      <td><button class="btn btn-danger" onclick="deleteGame('${g.id}')">🗑️ Remover</button></td>
+    `;
+    tbody.appendChild(tr);
   });
 }
+window.deleteGame = function (id) {
+  appState.games = appState.games.filter(g => g.id !== id);
+  saveGames();
+  renderGamesTable();
+  populateGameSelect();
+  notify("⚠️ Jogo removido!");
+};
 
-function renderOddsButtons(game) {
-  const container = document.getElementById("oddsButtons");
-  container.innerHTML = `
-    <div class="odd-button" onclick="selectBetType('home')">${game.homeTeam} (${game.homeOdd})</div>
-    <div class="odd-button" onclick="selectBetType('draw')">Empate (${game.drawOdd})</div>
-    <div class="odd-button" onclick="selectBetType('away')">${game.awayTeam} (${game.awayOdd})</div>
-  `;
+// --- SELECIONAR JOGO PARA APOSTA ---
+function populateGameSelect() {
+  const select = document.getElementById("gameSelect");
+  select.innerHTML = `<option value="">Selecione um jogo...</option>`;
+  appState.games.forEach(g => {
+    const option = document.createElement("option");
+    option.value = g.id;
+    option.textContent = g.name;
+    select.appendChild(option);
+  });
 }
-
-// Bets
-function placeBet(event) {
-  event.preventDefault();
-  const playerName = document.getElementById("playerName").value;
-  const amount = parseInt(
-    Utils.cleanBetAmount(document.getElementById("betAmount").value),
-  );
-  const gameId = appState.selectedGameId;
-  const betType = appState.selectedBetType;
-
-  if (!playerName || !gameId || !betType || !amount)
-    return UI.notify("Preencha todos os campos!", true);
-  if (amount < BET_LIMITS.MIN || amount > BET_LIMITS.MAX)
-    return UI.notify(
-      `Aposta entre ${Utils.formatCurrency(BET_LIMITS.MIN)} e ${Utils.formatCurrency(BET_LIMITS.MAX)}!`,
-      true,
-    );
-
-  onValue(
-    ref(db, "games/" + gameId),
-    (snap) => {
-      const game = snap.val();
-      if (!game) return UI.notify("Jogo inválido!", true);
-      const odd =
-        betType === "home"
-          ? game.homeOdd
-          : betType === "draw"
-            ? game.drawOdd
-            : game.awayOdd;
-      push(ref(db, "bets"), {
-        playerName,
-        gameId,
-        gameName: game.name,
-        betType,
-        amount,
-        odd,
-        status: "Pendente",
-        createdAt: new Date().toISOString(),
-      });
-      UI.notify("Aposta registrada!");
-    },
-    { once: true },
-  );
-}
-
-function selectBetType(type) {
-  appState.selectedBetType = type;
-  updatePossibleWin();
-}
-
-function selectGame() {
-  const sel = document.getElementById("gameSelect");
-  const gameId = sel.value;
+window.selectGame = function () {
+  const gameId = document.getElementById("gameSelect").value;
   appState.selectedGameId = gameId;
-  onValue(
-    ref(db, "games/" + gameId),
-    (snap) => {
-      const game = snap.val();
-      if (game) {
-        renderOddsButtons(game);
-        UI.toggle("oddsContainer", true);
-      }
-    },
-    { once: true },
-  );
-}
-
-function updatePossibleWin() {
-  const amt = document.getElementById("betAmount").value;
-  const winEl = document.getElementById("possibleWinAmount");
-  if (!appState.selectedGameId || !appState.selectedBetType || !amt) {
-    UI.toggle("possibleWinDisplay", false);
+  const oddsContainer = document.getElementById("oddsContainer");
+  if (!gameId) {
+    Utils.hide(oddsContainer);
     return;
   }
-  const amount = parseInt(Utils.cleanBetAmount(amt));
-  onValue(
-    ref(db, "games/" + appState.selectedGameId),
-    (snap) => {
-      const game = snap.val();
-      if (!game) return;
-      const odd =
-        appState.selectedBetType === "home"
-          ? game.homeOdd
-          : appState.selectedBetType === "draw"
-            ? game.drawOdd
-            : game.awayOdd;
-      winEl.textContent = Utils.formatCurrency(amount * odd);
-      UI.toggle("possibleWinDisplay", true);
-    },
-    { once: true },
-  );
-}
+  Utils.show(oddsContainer);
+  const game = appState.games.find(g => g.id === gameId);
+  const container = document.getElementById("oddsButtons");
+  container.innerHTML = `
+    <button type="button" class="btn btn-secondary" onclick="selectBetType('home')">${game.homeTeam} (${game.homeOdd})</button>
+    <button type="button" class="btn btn-secondary" onclick="selectBetType('draw')">Empate (${game.drawOdd})</button>
+    <button type="button" class="btn btn-secondary" onclick="selectBetType('away')">${game.awayTeam} (${game.awayOdd})</button>
+  `;
+};
+window.selectBetType = function (type) {
+  appState.selectedBetType = type;
+  calculatePossibleWin();
+};
 
-// Render bets table
-function renderBets(bets) {
+// --- APOSTAS ---
+function saveBets() {
+  localStorage.setItem(STORAGE_KEYS.BETS, JSON.stringify(appState.bets));
+}
+function loadBets() {
+  const data = localStorage.getItem(STORAGE_KEYS.BETS);
+  if (data) appState.bets = JSON.parse(data);
+}
+window.placeBet = function (e) {
+  e.preventDefault();
+  if (!appState.selectedGameId || !appState.selectedBetType) return notify("❌ Selecione um jogo e aposta!");
+  const name = document.getElementById("playerName").value;
+  const amount = Number(document.getElementById("betAmount").value.replace(/\D/g, ""));
+  if (amount < BET_LIMITS.MIN || amount > BET_LIMITS.MAX) return notify("❌ Valor fora do limite!");
+  const bet = {
+    id: Utils.generateId(),
+    player: name,
+    gameId: appState.selectedGameId,
+    type: appState.selectedBetType,
+    amount,
+    status: "Pendente"
+  };
+  appState.bets.push(bet);
+  saveBets();
+  renderBetsTable();
+  document.getElementById("betForm").reset();
+  Utils.hide(document.getElementById("oddsContainer"));
+  notify("✅ Aposta registrada!");
+};
+function renderBetsTable() {
   const tbody = document.querySelector("#betsTable tbody");
   tbody.innerHTML = "";
-  if (!bets) return;
-  Object.values(bets).forEach((bet) => {
-    const row = tbody.insertRow();
-    row.innerHTML = `<td>${bet.playerName}</td>
-      <td>${bet.gameName}</td>
-      <td>${bet.betType}</td>
-      <td>${Utils.formatCurrency(bet.amount)}</td>
-      <td>${bet.odd}</td>
-      <td>${Utils.formatCurrency(bet.amount * bet.odd)}</td>
-      <td>${bet.status}</td>
-      <td>${new Date(bet.createdAt).toLocaleString()}</td>`;
+  appState.bets.forEach(b => {
+    const game = appState.games.find(g => g.id === b.gameId);
+    const typeText = b.type === "home" ? game.homeTeam : b.type === "draw" ? "Empate" : game.awayTeam;
+    const odd = b.type === "home" ? game.homeOdd : b.type === "draw" ? game.drawOdd : game.awayOdd;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${b.player}</td>
+      <td>${game.name}</td>
+      <td>${typeText}</td>
+      <td>${Utils.formatCurrency(b.amount)}</td>
+      <td>${odd}</td>
+      <td>${Utils.formatCurrency(b.amount * odd)}</td>
+      <td>${b.status}</td>
+      <td><button class="btn btn-danger" onclick="deleteBet('${b.id}')">🗑️</button></td>
+    `;
+    tbody.appendChild(tr);
   });
 }
+window.deleteBet = function (id) {
+  appState.bets = appState.bets.filter(b => b.id !== id);
+  saveBets();
+  renderBetsTable();
+  notify("⚠️ Aposta removida!");
+};
 
-// Início
-document.addEventListener("DOMContentLoaded", () => {
-  // Jogos
-  onValue(ref(db, "games"), (snap) => {
-    renderGames(snap.val());
-  });
-
-  // Apostas
-  onValue(ref(db, "bets"), (snap) => {
-    renderBets(snap.val());
-  });
-});
+// --- INICIALIZAÇÃO ---
+function init() {
+  loadGames();
+  loadBets();
+  populateGameSelect();
+  if (localStorage.getItem(STORAGE_KEYS.ADMIN_SESSION) === "true") {
+    appState.isAdmin = true;
+    Utils.show(document.getElementById("adminPanel"));
+    Utils.hide(document.getElementById("adminLogin"));
+    renderGamesTable();
+    renderBetsTable();
+  }
+}
+init();

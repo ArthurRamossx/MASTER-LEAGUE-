@@ -32,7 +32,7 @@
     <section id="adminPanel" class="card hidden">
       <button class="btn btn-danger logout-btn" onclick="logoutAdmin()" data-testid="button-admin-logout">Sair do Admin</button>
       <h2>⚙️ Painel Administrativo</h2>
-      
+
       <!-- Adicionar Jogo -->
       <div class="admin-section">
         <h3>Adicionar Novo Jogo</h3>
@@ -132,7 +132,7 @@
           <label for="playerName">Seu Nome:</label>
           <input type="text" id="playerName" placeholder="Digite seu nome completo" required data-testid="input-player-name">
         </div>
-        
+
         <div class="form-group">
           <label for="gameSelect">Jogo Disponível:</label>
           <select id="gameSelect" onchange="selectGame()" required data-testid="select-game">
@@ -142,9 +142,7 @@
 
         <div id="oddsContainer" class="hidden">
           <label>Escolha seu palpite:</label>
-          <div class="odds-container" id="oddsButtons">
-            <!-- Odds buttons will be populated here -->
-          </div>
+          <div class="odds-container" id="oddsButtons"></div>
         </div>
 
         <div class="form-group">
@@ -163,73 +161,17 @@
     </section>
   </div>
 
-  <!-- Notification Toast -->
   <div id="notification" class="notification">
     <span id="notificationText"></span>
     <button onclick="closeNotification()" class="notification-close">×</button>
   </div>
 
-  <!-- Loading Spinner -->
   <div id="loadingSpinner" class="loading-spinner hidden">
     <div class="spinner"></div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-  <script src="script.js"></script>
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-    // Configuração Firebase
-    const firebaseConfig = {
-      databaseURL: "https://master-league-853a2-default-rtdb.firebaseio.com/"
-    };
-
-    // Inicializar Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // Salvar aposta
-    window.placeBet = function(event) {
-      event.preventDefault();
-      const nome = document.getElementById("playerName").value;
-      const jogo = document.getElementById("gameSelect").value;
-      const valor = document.getElementById("betAmount").value;
-
-      if (!nome || !jogo || !valor) return;
-
-      push(ref(db, "apostas"), {
-        jogador: nome,
-        jogo: jogo,
-        valor: valor,
-        status: "Pendente"
-      });
-    };
-
-    // Mostrar apostas em tempo real
-    const betsTable = document.querySelector("#betsTable tbody");
-    onValue(ref(db, "apostas"), (snapshot) => {
-      betsTable.innerHTML = "";
-      snapshot.forEach((child) => {
-        const dados = child.val();
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${dados.jogador}</td>
-          <td>${dados.jogo}</td>
-          <td>-</td>
-          <td>€${dados.valor}</td>
-          <td>-</td>
-          <td>-</td>
-          <td>${dados.status}</td>
-          <td>-</td>
-        `;
-        betsTable.appendChild(tr);
-      });
-    });
-  </script>
-
+  <script type="module" src="script.js"></script>
 </body>
 </html>
